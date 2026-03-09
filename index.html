@@ -7,1544 +7,1074 @@
   <title>annexa — ISO 27001:2022 for Engineers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    :root {
-      --bg:        #0a0a0f;
-      --bg2:       #0f0f18;
-      --bg3:       #13131f;
-      --border:    #1e1e30;
-      --border2:   #2a2a40;
-      --accent:    #00e5ff;
-      --accent2:   #7c3aed;
-      --accent3:   #10b981;
-      --warn:      #f59e0b;
-      --danger:    #ef4444;
-      --text:      #e2e8f0;
-      --text2:     #94a3b8;
-      --text3:     #475569;
-      --font-mono: 'JetBrains Mono', monospace;
-      --font-ui:   'Syne', sans-serif;
-      --sidebar-w: 240px;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: var(--font-mono);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* ── NOISE OVERLAY ── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 9999;
-      opacity: 0.4;
-    }
-
-    /* ── LAYOUT ── */
-    .app { display: flex; min-height: 100vh; }
-
-    /* ── SIDEBAR ── */
-    .sidebar {
-      width: var(--sidebar-w);
-      background: var(--bg2);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      top: 0; left: 0; bottom: 0;
-      z-index: 100;
-      transition: transform 0.3s ease;
-    }
-
-    .sidebar-logo {
-      padding: 24px 20px 20px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .logo-mark {
-      font-family: var(--font-ui);
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      color: var(--accent);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .logo-mark span {
-      display: inline-block;
-      width: 8px; height: 8px;
-      background: var(--accent);
-      border-radius: 50%;
-      box-shadow: 0 0 12px var(--accent);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.8); }
-    }
-
-    .logo-sub {
-      font-size: 9px;
-      color: var(--text3);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-top: 4px;
-      font-family: var(--font-mono);
-    }
-
-    .sidebar-nav {
-      flex: 1;
-      padding: 16px 0;
-      overflow-y: auto;
-    }
-
-    .nav-section-label {
-      font-size: 9px;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--text3);
-      padding: 12px 20px 6px;
-      font-family: var(--font-mono);
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 20px;
-      cursor: pointer;
-      transition: all 0.15s;
-      border-left: 2px solid transparent;
-      font-size: 12px;
-      color: var(--text2);
-      font-family: var(--font-mono);
-      position: relative;
-    }
-
-    .nav-item:hover {
-      color: var(--text);
-      background: rgba(0,229,255,0.04);
-      border-left-color: var(--border2);
-    }
-
-    .nav-item.active {
-      color: var(--accent);
-      background: rgba(0,229,255,0.07);
-      border-left-color: var(--accent);
-    }
-
-    .nav-item .icon {
-      width: 16px;
-      text-align: center;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    .nav-badge {
-      margin-left: auto;
-      font-size: 9px;
-      padding: 2px 6px;
-      border-radius: 3px;
-      background: rgba(0,229,255,0.1);
-      color: var(--accent);
-      letter-spacing: 0.5px;
-    }
-
-    .nav-badge.new {
-      background: rgba(16,185,129,0.15);
-      color: var(--accent3);
-    }
-
-    .sidebar-footer {
-      padding: 16px 20px;
-      border-top: 1px solid var(--border);
-    }
-
-    .version-tag {
-      font-size: 10px;
-      color: var(--text3);
-      font-family: var(--font-mono);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .version-tag::before {
-      content: '';
-      display: inline-block;
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--accent3);
-      box-shadow: 0 0 8px var(--accent3);
-    }
-
-    /* ── MAIN CONTENT ── */
-    .main {
-      margin-left: var(--sidebar-w);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    /* ── TOPBAR ── */
-    .topbar {
-      height: 56px;
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 28px;
-      gap: 16px;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-    }
-
-    .topbar-breadcrumb {
-      font-size: 11px;
-      color: var(--text3);
-      font-family: var(--font-mono);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .topbar-breadcrumb .sep { color: var(--border2); }
-    .topbar-breadcrumb .current { color: var(--text); }
-
-    .topbar-right {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .topbar-chip {
-      font-size: 10px;
-      padding: 4px 10px;
-      border-radius: 4px;
-      border: 1px solid var(--border2);
-      color: var(--text3);
-      font-family: var(--font-mono);
-      letter-spacing: 0.5px;
-    }
-
-    .topbar-chip.iso {
-      border-color: rgba(0,229,255,0.3);
-      color: var(--accent);
-      background: rgba(0,229,255,0.05);
-    }
-
-    /* ── PAGE CONTENT ── */
-    .page { display: none; padding: 32px 28px; max-width: 1200px; }
-    .page.active { display: block; animation: fadeIn 0.2s ease; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── DASHBOARD / HOME ── */
-    .page-header { margin-bottom: 32px; }
-
-    .page-title {
-      font-family: var(--font-ui);
-      font-size: 28px;
-      font-weight: 800;
-      color: var(--text);
-      letter-spacing: -0.5px;
-      line-height: 1.2;
-    }
-
-    .page-title .hl { color: var(--accent); }
-
-    .page-subtitle {
-      font-size: 12px;
-      color: var(--text3);
-      margin-top: 8px;
-      font-family: var(--font-mono);
-      line-height: 1.6;
-    }
-
-    /* ── STAT CARDS ── */
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-
-    .stat-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      position: relative;
-      overflow: hidden;
-      transition: border-color 0.2s;
-    }
-
-    .stat-card:hover { border-color: var(--border2); }
-
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-    }
-
-    .stat-card.c1::before { background: var(--accent); }
-    .stat-card.c2::before { background: var(--accent2); }
-    .stat-card.c3::before { background: var(--accent3); }
-    .stat-card.c4::before { background: var(--warn); }
-
-    .stat-label {
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text3);
-      font-family: var(--font-mono);
-      margin-bottom: 10px;
-    }
-
-    .stat-value {
-      font-family: var(--font-ui);
-      font-size: 32px;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1;
-    }
-
-    .stat-card.c1 .stat-value { color: var(--accent); }
-    .stat-card.c2 .stat-value { color: var(--accent2); }
-    .stat-card.c3 .stat-value { color: var(--accent3); }
-    .stat-card.c4 .stat-value { color: var(--warn); }
-
-    .stat-desc {
-      font-size: 11px;
-      color: var(--text3);
-      margin-top: 6px;
-      font-family: var(--font-mono);
-    }
-
-    /* ── FEATURE CARDS ── */
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-
-    .feature-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .feature-card:hover {
-      border-color: var(--accent);
-      background: rgba(0,229,255,0.03);
-      transform: translateY(-2px);
-    }
-
-    .feature-card:hover .fc-arrow { opacity: 1; transform: translateX(0); }
-
-    .fc-icon {
-      font-size: 24px;
-      margin-bottom: 14px;
-      display: block;
-    }
-
-    .fc-title {
-      font-family: var(--font-ui);
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-
-    .fc-desc {
-      font-size: 11px;
-      color: var(--text3);
-      line-height: 1.7;
-      font-family: var(--font-mono);
-    }
-
-    .fc-arrow {
-      position: absolute;
-      bottom: 20px; right: 20px;
-      color: var(--accent);
-      font-size: 16px;
-      opacity: 0;
-      transform: translateX(-4px);
-      transition: all 0.2s;
-    }
-
-    .fc-tag {
-      display: inline-block;
-      font-size: 9px;
-      padding: 2px 7px;
-      border-radius: 3px;
-      margin-top: 10px;
-      font-family: var(--font-mono);
-      letter-spacing: 0.5px;
-    }
-
-    .fc-tag.live { background: rgba(16,185,129,0.15); color: var(--accent3); }
-    .fc-tag.soon { background: rgba(245,158,11,0.1); color: var(--warn); }
-
-    /* ── HEATMAP PAGE ── */
-    .heatmap-controls {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .filter-group { display: flex; gap: 6px; }
-
-    .filter-btn {
-      font-size: 11px;
-      padding: 6px 14px;
-      border-radius: 4px;
-      border: 1px solid var(--border2);
-      background: transparent;
-      color: var(--text2);
-      cursor: pointer;
-      font-family: var(--font-mono);
-      transition: all 0.15s;
-      letter-spacing: 0.3px;
-    }
-
-    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
-
-    .heatmap-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
-      gap: 4px;
-      margin-bottom: 24px;
-    }
-
-    .hm-cell {
-      aspect-ratio: 1;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      font-family: var(--font-mono);
-      cursor: pointer;
-      transition: all 0.15s;
-      border: 1px solid transparent;
-      position: relative;
-    }
-
-    .hm-cell:hover {
-      transform: scale(1.15);
-      z-index: 10;
-      border-color: rgba(255,255,255,0.3);
-    }
-
-    .hm-cell.not-set    { background: rgba(255,255,255,0.04); color: var(--text3); border-color: var(--border); }
-    .hm-cell.implemented { background: rgba(16,185,129,0.25); color: var(--accent3); }
-    .hm-cell.partial    { background: rgba(245,158,11,0.2);  color: var(--warn); }
-    .hm-cell.gap        { background: rgba(239,68,68,0.2);   color: var(--danger); }
-    .hm-cell.na         { background: rgba(255,255,255,0.02); color: var(--text3); opacity: 0.4; }
-
-    .heatmap-legend {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      color: var(--text2);
-      font-family: var(--font-mono);
-    }
-
-    .legend-dot {
-      width: 12px; height: 12px;
-      border-radius: 3px;
-    }
-
-    /* ── CONTROLS PAGE ── */
-    .role-selector {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-    }
-
-    .role-btn {
-      padding: 8px 16px;
-      border-radius: 6px;
-      border: 1px solid var(--border2);
-      background: transparent;
-      color: var(--text2);
-      cursor: pointer;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .role-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-    .role-btn.active {
-      background: rgba(0,229,255,0.1);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .controls-list { display: flex; flex-direction: column; gap: 8px; }
-
-    .control-item {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 16px 20px;
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-    }
-
-    .control-item:hover {
-      border-color: var(--border2);
-      background: var(--bg3);
-    }
-
-    .control-id {
-      font-size: 11px;
-      color: var(--accent);
-      font-family: var(--font-mono);
-      white-space: nowrap;
-      padding-top: 2px;
-      min-width: 54px;
-    }
-
-    .control-body { flex: 1; }
-
-    .control-name {
-      font-size: 13px;
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .control-plain {
-      font-size: 11px;
-      color: var(--text3);
-      font-family: var(--font-mono);
-      line-height: 1.6;
-    }
-
-    .control-tags {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-      flex-wrap: wrap;
-    }
-
-    .ctag {
-      font-size: 9px;
-      padding: 2px 7px;
-      border-radius: 3px;
-      font-family: var(--font-mono);
-      letter-spacing: 0.3px;
-    }
-
-    .ctag.org   { background: rgba(124,58,237,0.15); color: var(--accent2); }
-    .ctag.tech  { background: rgba(0,229,255,0.1);   color: var(--accent); }
-    .ctag.ppl   { background: rgba(16,185,129,0.15); color: var(--accent3); }
-    .ctag.phys  { background: rgba(245,158,11,0.1);  color: var(--warn); }
-
-    .control-status {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      margin-top: 6px;
-      flex-shrink: 0;
-    }
-
-    .control-status.done { background: var(--accent3); box-shadow: 0 0 6px var(--accent3); }
-    .control-status.part { background: var(--warn); }
-    .control-status.none { background: var(--border2); }
-
-    /* ── RISK PAGE ── */
-    .risk-form {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 28px;
-      max-width: 640px;
-      margin-bottom: 32px;
-    }
-
-    .form-title {
-      font-family: var(--font-ui);
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 20px;
-    }
-
-    .form-row { margin-bottom: 18px; }
-
-    .form-label {
-      display: block;
-      font-size: 10px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text3);
-      font-family: var(--font-mono);
-      margin-bottom: 8px;
-    }
-
-    .form-input, .form-select, .form-textarea {
-      width: 100%;
-      background: var(--bg3);
-      border: 1px solid var(--border2);
-      border-radius: 5px;
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      padding: 10px 14px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
-      border-color: var(--accent);
-    }
-
-    .form-textarea { resize: vertical; min-height: 80px; }
-    .form-select option { background: var(--bg3); }
-
-    .slider-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .form-slider {
-      flex: 1;
-      accent-color: var(--accent);
-      height: 4px;
-      cursor: pointer;
-    }
-
-    .slider-val {
-      font-size: 20px;
-      font-family: var(--font-ui);
-      font-weight: 800;
-      color: var(--accent);
-      min-width: 24px;
-      text-align: center;
-    }
- 
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 22px;
-      background: var(--accent);
-      color: var(--bg);
-      border: none;
-      border-radius: 5px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-      letter-spacing: 0.3px;
-    }
-
-    .btn-primary:hover { background: #33ecff; transform: translateY(-1px); }
-
-    .risk-register {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .rr-header {
-      display: grid;
-      grid-template-columns: 1fr 100px 100px 100px 110px;
-      gap: 16px;
-      padding: 12px 20px;
-      border-bottom: 1px solid var(--border);
-      font-size: 10px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text3);
-      font-family: var(--font-mono);
-    }
-
-    .rr-row {
-      display: grid;
-      grid-template-columns: 1fr 100px 100px 100px 110px;
-      gap: 16px;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      font-size: 12px;
-      font-family: var(--font-mono);
-      transition: background 0.1s;
-      align-items: center;
-    }
-
-    .rr-row:last-child { border-bottom: none; }
-    .rr-row:hover { background: var(--bg3); }
-
-    .risk-score {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px; height: 24px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 700;
-      font-family: var(--font-ui);
-    }
-
-    .risk-score.high   { background: rgba(239,68,68,0.2);   color: var(--danger); }
-    .risk-score.medium { background: rgba(245,158,11,0.2);  color: var(--warn); }
-    .risk-score.low    { background: rgba(16,185,129,0.2);  color: var(--accent3); }
-
-    .risk-badge {
-      font-size: 10px;
-      padding: 3px 8px;
-      border-radius: 3px;
-    }
-
-    .risk-badge.high   { background: rgba(239,68,68,0.15);   color: var(--danger); }
-    .risk-badge.medium { background: rgba(245,158,11,0.15);  color: var(--warn); }
-    .risk-badge.low    { background: rgba(16,185,129,0.15);  color: var(--accent3); }
-
-    /* ── TERMINAL SECTION ── */
-    .terminal-block {
-      background: #050508;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 16px 20px;
-      font-size: 11px;
-      font-family: var(--font-mono);
-      line-height: 1.8;
-      color: var(--text2);
-      margin-top: 12px;
-    }
-
-    .terminal-block .cmd { color: var(--accent); }
-    .terminal-block .cmt { color: var(--text3); }
-    .terminal-block .ok  { color: var(--accent3); }
-    .terminal-block .err { color: var(--danger); }
-
-    /* ── COMING SOON CARDS ── */
-    .coming-soon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      padding: 60px 20px;
-      border: 1px dashed var(--border2);
-      border-radius: 8px;
-      text-align: center;
-      gap: 12px;
-    }
-
-    .coming-soon .cs-icon { font-size: 36px; opacity: 0.4; }
-
-    .coming-soon .cs-title {
-      font-family: var(--font-ui);
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text2);
-    }
-
-    .coming-soon .cs-sub {
-      font-size: 11px;
-      color: var(--text3);
-      font-family: var(--font-mono);
-    }
-
-    /* ── DIFF VIEWER ── */
-    .diff-item {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 16px 20px;
-      margin-bottom: 8px;
-      display: grid;
-      grid-template-columns: 1fr 24px 1fr;
-      gap: 16px;
-      align-items: start;
-      font-size: 11px;
-      font-family: var(--font-mono);
-    }
-
-    .diff-badge {
-      font-size: 9px;
-      padding: 2px 7px;
-      border-radius: 3px;
-      font-family: var(--font-mono);
-      letter-spacing: 0.5px;
-      white-space: nowrap;
-      display: inline-block;
-      margin-bottom: 6px;
-    }
-
-    .diff-badge.merged  { background: rgba(124,58,237,0.2); color: var(--accent2); }
-    .diff-badge.new     { background: rgba(16,185,129,0.2); color: var(--accent3); }
-    .diff-badge.renamed { background: rgba(0,229,255,0.1);  color: var(--accent); }
-    .diff-badge.same    { background: rgba(255,255,255,0.05); color: var(--text3); }
-
-    .diff-arrow { color: var(--text3); text-align: center; padding-top: 6px; }
-    .diff-name { color: var(--text); font-weight: 500; }
-    .diff-id   { color: var(--text3); font-size: 10px; margin-bottom: 4px; }
-
-    /* ── SCROLLBAR ── */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
-
-    /* ── MOBILE TOGGLE ── */
-    .mobile-menu-btn {
-      display: none;
-      position: fixed;
-      top: 14px; left: 14px;
-      z-index: 200;
-      background: var(--bg2);
-      border: 1px solid var(--border2);
-      border-radius: 6px;
-      width: 36px; height: 36px;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text);
-      font-size: 16px;
-    }
-
-    @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); }
-      .sidebar.open { transform: translateX(0); }
-      .main { margin-left: 0; }
-      .mobile-menu-btn { display: flex; }
-      .stat-grid { grid-template-columns: repeat(2, 1fr); }
-      .feature-grid { grid-template-columns: 1fr; }
-      .rr-header, .rr-row { grid-template-columns: 1fr 80px 80px; }
-      .rr-header > *:nth-child(4),
-      .rr-header > *:nth-child(5),
-      .rr-row > *:nth-child(4),
-      .rr-row > *:nth-child(5) { display: none; }
-    }
-
-    /* ── TOOLTIP ── */
-    .tooltip-wrap { position: relative; display: inline-block; }
-    .tooltip {
-      position: absolute;
-      bottom: calc(100% + 8px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--bg3);
-      border: 1px solid var(--border2);
-      border-radius: 5px;
-      padding: 8px 12px;
-      font-size: 11px;
-      font-family: var(--font-mono);
-      color: var(--text);
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.15s;
-      z-index: 100;
-    }
-    .tooltip-wrap:hover .tooltip { opacity: 1; }
-
-    /* ── PROGRESS BAR ── */
-    .progress-bar-wrap {
-      background: var(--border);
-      border-radius: 3px;
-      height: 4px;
-      overflow: hidden;
-      margin-top: 8px;
-    }
-    .progress-bar {
-      height: 100%;
-      border-radius: 3px;
-      background: var(--accent);
-      transition: width 1s ease;
-    }
-
-    .section-divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 28px 0;
-    }
-
-    .inline-code {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      background: var(--bg3);
-      border: 1px solid var(--border2);
-      border-radius: 3px;
-      padding: 1px 6px;
-      color: var(--accent);
-    }
+    :root{--bg:#0a0a0f;--bg2:#0f0f18;--bg3:#13131f;--border:#1e1e30;--border2:#2a2a40;--accent:#00e5ff;--accent2:#7c3aed;--accent3:#10b981;--warn:#f59e0b;--danger:#ef4444;--text:#e2e8f0;--text2:#94a3b8;--text3:#475569;--font-mono:'JetBrains Mono',monospace;--font-ui:'Syne',sans-serif;--sidebar-w:240px}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--font-mono);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4}
+    .app{display:flex;min-height:100vh}
+    .sidebar{width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s ease}
+    .sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+    .logo-mark{font-family:var(--font-ui);font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--accent);display:flex;align-items:center;gap:8px}
+    .logo-mark span{display:inline-block;width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px var(--accent);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+    .logo-sub{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+    .sidebar-nav{flex:1;padding:16px 0;overflow-y:auto}
+    .nav-section-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);padding:12px 20px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;transition:all .15s;border-left:2px solid transparent;font-size:12px;color:var(--text2)}
+    .nav-item:hover{color:var(--text);background:rgba(0,229,255,.04);border-left-color:var(--border2)}
+    .nav-item.active{color:var(--accent);background:rgba(0,229,255,.07);border-left-color:var(--accent)}
+    .nav-item .icon{width:16px;text-align:center;font-size:14px;flex-shrink:0}
+    .nav-badge{margin-left:auto;font-size:9px;padding:2px 6px;border-radius:3px;background:rgba(0,229,255,.1);color:var(--accent);letter-spacing:.5px}
+    .nav-badge.new{background:rgba(16,185,129,.15);color:var(--accent3)}
+    .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
+    .version-tag{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:6px}
+    .version-tag::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent3);box-shadow:0 0 8px var(--accent3)}
+    .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+    .topbar{height:56px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:50}
+    .topbar-breadcrumb{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:8px}
+    .topbar-breadcrumb .sep{color:var(--border2)}
+    .topbar-breadcrumb .current{color:var(--text)}
+    .topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .topbar-chip{font-size:10px;padding:4px 10px;border-radius:4px;border:1px solid var(--border2);color:var(--text3);letter-spacing:.5px}
+    .topbar-chip.iso{border-color:rgba(0,229,255,.3);color:var(--accent);background:rgba(0,229,255,.05)}
+    .page{display:none;padding:32px 28px;max-width:1200px}
+    .page.active{display:block;animation:fadeIn .2s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .page-header{margin-bottom:32px}
+    .page-title{font-family:var(--font-ui);font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1.2}
+    .page-title .hl{color:var(--accent)}
+    .page-subtitle{font-size:12px;color:var(--text3);margin-top:8px;line-height:1.6}
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+    .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden;transition:border-color .2s}
+    .stat-card:hover{border-color:var(--border2)}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+    .stat-card.c1::before{background:var(--accent)}.stat-card.c2::before{background:var(--accent2)}.stat-card.c3::before{background:var(--accent3)}.stat-card.c4::before{background:var(--warn)}
+    .stat-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+    .stat-value{font-family:var(--font-ui);font-size:32px;font-weight:800;line-height:1}
+    .stat-card.c1 .stat-value{color:var(--accent)}.stat-card.c2 .stat-value{color:var(--accent2)}.stat-card.c3 .stat-value{color:var(--accent3)}.stat-card.c4 .stat-value{color:var(--warn)}
+    .stat-desc{font-size:11px;color:var(--text3);margin-top:6px}
+    .progress-bar-wrap{background:var(--border);border-radius:3px;height:4px;overflow:hidden;margin-top:8px}
+    .progress-bar{height:100%;border-radius:3px;background:var(--accent);transition:width 1s ease}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}
+    .feature-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:24px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+    .feature-card:hover{border-color:var(--accent);background:rgba(0,229,255,.03);transform:translateY(-2px)}
+    .feature-card:hover .fc-arrow{opacity:1;transform:translateX(0)}
+    .fc-icon{font-size:24px;margin-bottom:14px;display:block}
+    .fc-title{font-family:var(--font-ui);font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px}
+    .fc-desc{font-size:11px;color:var(--text3);line-height:1.7}
+    .fc-arrow{position:absolute;bottom:20px;right:20px;color:var(--accent);font-size:16px;opacity:0;transform:translateX(-4px);transition:all .2s}
+    .fc-tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:3px;margin-top:10px;letter-spacing:.5px}
+    .fc-tag.live{background:rgba(16,185,129,.15);color:var(--accent3)}
+    .heatmap-controls{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center}
+    .filter-group{display:flex;gap:6px;flex-wrap:wrap}
+    .filter-btn{font-size:11px;padding:6px 14px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;letter-spacing:.3px}
+    .filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .filter-btn.active{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:600}
+    .heatmap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:4px;margin-bottom:24px}
+    .hm-cell{aspect-ratio:1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;cursor:pointer;transition:all .15s;border:1px solid transparent;position:relative}
+    .hm-cell:hover{transform:scale(1.15);z-index:10;border-color:rgba(255,255,255,.3)}
+    .hm-cell.not-set{background:rgba(255,255,255,.04);color:var(--text3);border-color:var(--border)}
+    .hm-cell.implemented{background:rgba(16,185,129,.25);color:var(--accent3)}
+    .hm-cell.partial{background:rgba(245,158,11,.2);color:var(--warn)}
+    .hm-cell.gap{background:rgba(239,68,68,.2);color:var(--danger)}
+    .hm-cell.na{background:rgba(255,255,255,.02);color:var(--text3);opacity:.4}
+    .heatmap-legend{display:flex;gap:20px;flex-wrap:wrap}
+    .legend-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text2)}
+    .legend-dot{width:12px;height:12px;border-radius:3px}
+    .role-selector{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+    .role-btn{padding:8px 16px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:11px;transition:all .15s;display:flex;align-items:center;gap:6px}
+    .role-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .role-btn.active{background:rgba(0,229,255,.1);border-color:var(--accent);color:var(--accent)}
+    .controls-list{display:flex;flex-direction:column;gap:8px}
+    .control-item{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px 20px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:16px}
+    .control-item:hover{border-color:var(--border2);background:var(--bg3)}
+    .control-id{font-size:11px;color:var(--accent);white-space:nowrap;padding-top:2px;min-width:54px}
+    .control-body{flex:1}
+    .control-name{font-size:13px;color:var(--text);font-family:var(--font-ui);font-weight:600;margin-bottom:4px}
+    .control-plain{font-size:11px;color:var(--text3);line-height:1.6}
+    .control-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+    .ctag{font-size:9px;padding:2px 7px;border-radius:3px;letter-spacing:.3px}
+    .ctag.org{background:rgba(124,58,237,.15);color:var(--accent2)}.ctag.tech{background:rgba(0,229,255,.1);color:var(--accent)}.ctag.ppl{background:rgba(16,185,129,.15);color:var(--accent3)}.ctag.phys{background:rgba(245,158,11,.1);color:var(--warn)}
+    .control-status{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0}
+    .control-status.done{background:var(--accent3);box-shadow:0 0 6px var(--accent3)}.control-status.part{background:var(--warn)}.control-status.none{background:var(--border2)}
+    .risk-form{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:28px;max-width:640px;margin-bottom:32px}
+    .form-title{font-family:var(--font-ui);font-size:16px;font-weight:700;color:var(--text);margin-bottom:20px}
+    .form-row{margin-bottom:18px}
+    .form-label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+    .form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:var(--font-mono);font-size:12px;padding:10px 14px;outline:none;transition:border-color .15s}
+    .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
+    .form-textarea{resize:vertical;min-height:80px}
+    .form-select option{background:var(--bg3)}
+    .slider-row{display:flex;align-items:center;gap:14px}
+    .form-slider{flex:1;accent-color:var(--accent);height:4px;cursor:pointer}
+    .slider-val{font-size:20px;font-family:var(--font-ui);font-weight:800;color:var(--accent);min-width:24px;text-align:center}
+    .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:var(--accent);color:var(--bg);border:none;border-radius:5px;font-family:var(--font-mono);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.3px}
+    .btn-primary:hover{background:#33ecff;transform:translateY(-1px)}
+    .btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:transparent;color:var(--text2);border:1px solid var(--border2);border-radius:5px;font-family:var(--font-mono);font-size:12px;cursor:pointer;transition:all .15s}
+    .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+    .risk-register{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+    .rr-header{display:grid;grid-template-columns:1fr 100px 100px 100px 110px 40px;gap:16px;padding:12px 20px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3)}
+    .rr-row{display:grid;grid-template-columns:1fr 100px 100px 100px 110px 40px;gap:16px;padding:14px 20px;border-bottom:1px solid var(--border);font-size:12px;transition:background .1s;align-items:center}
+    .rr-row:last-child{border-bottom:none}
+    .rr-row:hover{background:var(--bg3)}
+    .risk-score{display:inline-flex;align-items:center;justify-content:center;width:36px;height:24px;border-radius:4px;font-size:12px;font-weight:700;font-family:var(--font-ui)}
+    .risk-score.high{background:rgba(239,68,68,.2);color:var(--danger)}.risk-score.medium{background:rgba(245,158,11,.2);color:var(--warn)}.risk-score.low{background:rgba(16,185,129,.2);color:var(--accent3)}
+    .risk-badge{font-size:10px;padding:3px 8px;border-radius:3px}
+    .risk-badge.high{background:rgba(239,68,68,.15);color:var(--danger)}.risk-badge.medium{background:rgba(245,158,11,.15);color:var(--warn)}.risk-badge.low{background:rgba(16,185,129,.15);color:var(--accent3)}
+    .del-btn{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;transition:color .15s;padding:4px}
+    .del-btn:hover{color:var(--danger)}
+    .diff-item{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px 20px;margin-bottom:8px;display:grid;grid-template-columns:1fr 24px 1fr;gap:16px;align-items:start;font-size:11px}
+    .diff-badge{font-size:9px;padding:2px 7px;border-radius:3px;letter-spacing:.5px;white-space:nowrap;display:inline-block;margin-bottom:6px}
+    .diff-badge.merged{background:rgba(124,58,237,.2);color:var(--accent2)}.diff-badge.new{background:rgba(16,185,129,.2);color:var(--accent3)}.diff-badge.renamed{background:rgba(0,229,255,.1);color:var(--accent)}.diff-badge.same{background:rgba(255,255,255,.05);color:var(--text3)}
+    .diff-arrow{color:var(--text3);text-align:center;padding-top:6px}
+    .diff-name{color:var(--text);font-weight:500}
+    .diff-id{color:var(--text3);font-size:10px;margin-bottom:4px}
+    .terminal-block{background:#050508;border:1px solid var(--border);border-radius:6px;padding:16px 20px;font-size:11px;line-height:1.8;color:var(--text2);margin-top:12px}
+    .terminal-block .cmd{color:var(--accent)}.terminal-block .cmt{color:var(--text3)}.terminal-block .ok{color:var(--accent3)}
+    /* POSTURE */
+    .posture-questions{display:flex;flex-direction:column;gap:16px;max-width:700px;margin-bottom:28px}
+    .posture-q{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px}
+    .posture-q-text{font-size:13px;color:var(--text);margin-bottom:14px;line-height:1.5;font-family:var(--font-ui);font-weight:600}
+    .posture-q-domain{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+    .posture-options{display:flex;gap:8px;flex-wrap:wrap}
+    .posture-opt{padding:7px 14px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:11px;transition:all .15s}
+    .posture-opt:hover{border-color:var(--accent);color:var(--accent)}
+    .posture-opt.sel-3{background:rgba(0,229,255,.12);border-color:var(--accent);color:var(--accent)}
+    .posture-opt.sel-2{background:rgba(16,185,129,.12);border-color:var(--accent3);color:var(--accent3)}
+    .posture-opt.sel-1{background:rgba(245,158,11,.1);border-color:var(--warn);color:var(--warn)}
+    .posture-opt.sel-0{background:rgba(239,68,68,.1);border-color:var(--danger);color:var(--danger)}
+    .radar-wrap{display:flex;justify-content:center;margin:32px 0}
+    .score-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px}
+    .score-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center}
+    .score-num{font-family:var(--font-ui);font-size:32px;font-weight:800}
+    .score-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-top:6px}
+    .score-bar-wrap{height:6px;background:var(--border);border-radius:3px;margin-top:12px;overflow:hidden}
+    .score-bar{height:100%;border-radius:3px;transition:width 1s ease}
+    /* SOA */
+    .soa-table{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:24px}
+    .soa-header{display:grid;grid-template-columns:80px 1fr 140px 1fr;gap:16px;padding:12px 20px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3)}
+    .soa-row{display:grid;grid-template-columns:80px 1fr 140px 1fr;gap:16px;padding:12px 20px;border-bottom:1px solid var(--border);font-size:11px;align-items:center;transition:background .1s}
+    .soa-row:last-child{border-bottom:none}
+    .soa-row:hover{background:var(--bg3)}
+    .soa-select{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:10px;padding:4px 8px;outline:none;cursor:pointer;width:100%}
+    .soa-select:focus{border-color:var(--accent)}
+    .soa-input{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:10px;padding:4px 8px;outline:none;width:100%;font-family:var(--font-mono)}
+    .soa-input:focus{border-color:var(--accent)}
+    .soa-id{color:var(--accent);font-size:11px}
+    .soa-stats{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+    .soa-stat{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px 20px;display:flex;align-items:center;gap:12px}
+    .soa-stat-num{font-family:var(--font-ui);font-size:24px;font-weight:800}
+    .soa-stat-label{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+    /* THREATS */
+    .threat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+    .threat-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;cursor:pointer;transition:all .2s}
+    .threat-card:hover{border-color:var(--danger);background:rgba(239,68,68,.04)}
+    .threat-card.selected{border-color:var(--danger);background:rgba(239,68,68,.08)}
+    .threat-icon{font-size:24px;margin-bottom:10px}
+    .threat-name{font-family:var(--font-ui);font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px}
+    .threat-desc{font-size:10px;color:var(--text3);line-height:1.5}
+    .threat-result{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:24px;display:none}
+    .threat-result.visible{display:block;animation:fadeIn .3s ease}
+    .tr-section{margin-bottom:20px}
+    .tr-section-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .tr-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+    .tr-ctrl{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-radius:6px;font-size:11px;margin-bottom:8px}
+    .tr-ctrl.prevents{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2)}
+    .tr-ctrl.gap{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2)}
+    .tr-ctrl-id{color:var(--accent);min-width:50px;font-size:10px;padding-top:2px}
+    .tr-ctrl-name{color:var(--text);font-weight:600;margin-bottom:3px;font-family:var(--font-ui);font-size:12px}
+    .tr-ctrl-why{color:var(--text3);font-size:10px;line-height:1.4}
+    .tr-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+    .prevents .tr-status-dot{background:var(--accent3);box-shadow:0 0 6px var(--accent3)}
+    .gap .tr-status-dot{background:var(--danger)}
+    /* EVIDENCE */
+    .ev-select-wrap{margin-bottom:24px;max-width:400px}
+    .ev-result{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+    .ev-header{padding:20px 24px;border-bottom:1px solid var(--border)}
+    .ev-ctrl-id{font-size:11px;color:var(--accent);margin-bottom:4px}
+    .ev-ctrl-name{font-family:var(--font-ui);font-size:16px;font-weight:700;color:var(--text)}
+    .ev-items{padding:20px 24px;display:flex;flex-direction:column;gap:10px}
+    .ev-item{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)}
+    .ev-checkbox{width:18px;height:18px;border-radius:4px;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px;transition:all .15s;font-size:11px;font-weight:700;color:var(--bg)}
+    .ev-checkbox.checked{background:var(--accent3);border-color:var(--accent3)}
+    .ev-item-title{font-size:12px;color:var(--text);margin-bottom:3px;font-family:var(--font-ui);font-weight:600}
+    .ev-item-desc{font-size:10px;color:var(--text3);line-height:1.5}
+    .ev-item-type{display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;margin-top:4px}
+    .ev-item-type.doc{background:rgba(0,229,255,.1);color:var(--accent)}.ev-item-type.screenshot{background:rgba(124,58,237,.15);color:var(--accent2)}.ev-item-type.log{background:rgba(16,185,129,.15);color:var(--accent3)}.ev-item-type.config{background:rgba(245,158,11,.1);color:var(--warn)}
+    ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+    .mobile-menu-btn{display:none;position:fixed;top:14px;left:14px;z-index:200;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:16px}
+    @media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.mobile-menu-btn{display:flex}.stat-grid{grid-template-columns:repeat(2,1fr)}.feature-grid{grid-template-columns:1fr}.score-grid{grid-template-columns:repeat(2,1fr)}.threat-grid{grid-template-columns:1fr}.soa-header,.soa-row{grid-template-columns:60px 1fr 120px}.soa-header>*:last-child,.soa-row>*:last-child{display:none}}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--accent3);border-radius:6px;padding:12px 20px;font-size:12px;color:var(--accent3);z-index:9998;animation:slideUp .3s ease;pointer-events:none}
+    @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   </style>
 </head>
 <body>
-
 <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-
 <div class="app">
-  <!-- ── SIDEBAR ── -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="logo-mark"><span></span>annexa</div>
       <div class="logo-sub">ISO 27001:2022 · Engineer Toolkit</div>
     </div>
-
     <nav class="sidebar-nav">
       <div class="nav-section-label">Overview</div>
-      <div class="nav-item active" onclick="nav('dashboard', this)">
-        <span class="icon">⬡</span> Dashboard
-      </div>
-
+      <div class="nav-item active" onclick="nav('dashboard',this)"><span class="icon">⬡</span>Dashboard</div>
       <div class="nav-section-label">Core Tools</div>
-      <div class="nav-item" onclick="nav('heatmap', this)">
-        <span class="icon">▦</span> Compliance Heatmap
-        <span class="nav-badge new">live</span>
-      </div>
-      <div class="nav-item" onclick="nav('controls', this)">
-        <span class="icon">◈</span> Controls Guide
-        <span class="nav-badge new">live</span>
-      </div>
-      <div class="nav-item" onclick="nav('risk', this)">
-        <span class="icon">◎</span> Risk Register
-        <span class="nav-badge new">live</span>
-      </div>
-      <div class="nav-item" onclick="nav('diff', this)">
-        <span class="icon">⇄</span> 2013 → 2022 Diff
-        <span class="nav-badge new">live</span>
-      </div>
-
-      <div class="nav-section-label">Advanced</div>
-      <div class="nav-item" onclick="nav('soa', this)">
-        <span class="icon">◉</span> SoA Generator
-        <span class="nav-badge">soon</span>
-      </div>
-      <div class="nav-item" onclick="nav('posture', this)">
-        <span class="icon">◈</span> Posture Score
-        <span class="nav-badge">soon</span>
-      </div>
-      <div class="nav-item" onclick="nav('threats', this)">
-        <span class="icon">⚠</span> Threat Mapper
-        <span class="nav-badge">soon</span>
-      </div>
-      <div class="nav-item" onclick="nav('evidence', this)">
-        <span class="icon">◻</span> Evidence Wizard
-        <span class="nav-badge">soon</span>
-      </div>
-      <div class="nav-item" onclick="nav('snippets', this)">
-        <span class="icon">&lt;/&gt;</span> Code Snippets
-        <span class="nav-badge">soon</span>
-      </div>
+      <div class="nav-item" onclick="nav('heatmap',this)"><span class="icon">▦</span>Compliance Heatmap<span class="nav-badge new">live</span></div>
+      <div class="nav-item" onclick="nav('controls',this)"><span class="icon">◈</span>Controls Guide<span class="nav-badge new">live</span></div>
+      <div class="nav-item" onclick="nav('risk',this)"><span class="icon">◎</span>Risk Register<span class="nav-badge new">live</span></div>
+      <div class="nav-item" onclick="nav('diff',this)"><span class="icon">⇄</span>2013 → 2022 Diff<span class="nav-badge new">live</span></div>
+      <div class="nav-section-label">Advanced · v0.2</div>
+      <div class="nav-item" onclick="nav('posture',this)"><span class="icon">◈</span>Posture Score<span class="nav-badge new">new</span></div>
+      <div class="nav-item" onclick="nav('soa',this)"><span class="icon">◉</span>SoA Generator<span class="nav-badge new">new</span></div>
+      <div class="nav-item" onclick="nav('threats',this)"><span class="icon">⚠</span>Threat Mapper<span class="nav-badge new">new</span></div>
+      <div class="nav-item" onclick="nav('evidence',this)"><span class="icon">◻</span>Evidence Wizard<span class="nav-badge new">new</span></div>
+      <div class="nav-section-label">Coming Soon</div>
+      <div class="nav-item"><span class="icon">&lt;/&gt;</span>Code Snippets<span class="nav-badge">soon</span></div>
+      <div class="nav-item"><span class="icon">⇌</span>Framework Mapper<span class="nav-badge">soon</span></div>
     </nav>
-
     <div class="sidebar-footer">
-      <div class="version-tag">v0.1.0 · 2022 edition · offline-ready</div>
+      <div class="version-tag">v0.2.0 · 2022 edition · offline-ready</div>
     </div>
   </aside>
 
-  <!-- ── MAIN ── -->
   <main class="main">
     <header class="topbar">
       <div class="topbar-breadcrumb">
-        <span>annexa</span>
-        <span class="sep">/</span>
+        <span>annexa</span><span class="sep">/</span>
         <span class="current" id="breadcrumb">dashboard</span>
       </div>
       <div class="topbar-right">
         <span class="topbar-chip iso">ISO 27001:2022</span>
         <span class="topbar-chip">93 controls</span>
-        <span class="topbar-chip" id="offline-status">● offline-ready</span>
+        <span class="topbar-chip">● offline-ready</span>
       </div>
     </header>
 
-    <!-- ══ DASHBOARD ══ -->
+    <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <div class="page-header">
-        <div class="page-title">
-          Engineer's guide to<br><span class="hl">ISO 27001:2022</span>
-        </div>
-        <div class="page-subtitle">
-          Free · Offline · No signup · No API keys · No billing · Just tools.<br>
-          Built for DevOps, Backend, Security &amp; GRC engineers.
-        </div>
+        <div class="page-title">Engineer's guide to<br><span class="hl">ISO 27001:2022</span></div>
+        <div class="page-subtitle">Free · Offline · No signup · No API keys · No billing · Just tools.<br>Built for DevOps, Backend, Security &amp; GRC engineers.</div>
       </div>
-
       <div class="stat-grid">
-        <div class="stat-card c1">
-          <div class="stat-label">Total Controls</div>
-          <div class="stat-value">93</div>
-          <div class="stat-desc">Annex A · 2022 edition</div>
-          <div class="progress-bar-wrap"><div class="progress-bar" style="width:100%"></div></div>
-        </div>
-        <div class="stat-card c2">
-          <div class="stat-label">Organizational</div>
-          <div class="stat-value">37</div>
-          <div class="stat-desc">A.5.1 – A.5.37</div>
-          <div class="progress-bar-wrap"><div class="progress-bar" style="width:40%; background: var(--accent2)"></div></div>
-        </div>
-        <div class="stat-card c3">
-          <div class="stat-label">Technological</div>
-          <div class="stat-value">34</div>
-          <div class="stat-desc">A.8.1 – A.8.34</div>
-          <div class="progress-bar-wrap"><div class="progress-bar" style="width:36%; background: var(--accent3)"></div></div>
-        </div>
-        <div class="stat-card c4">
-          <div class="stat-label">New in 2022</div>
-          <div class="stat-value">11</div>
-          <div class="stat-desc">Cloud · Threat Intel · DLP</div>
-          <div class="progress-bar-wrap"><div class="progress-bar" style="width:12%; background: var(--warn)"></div></div>
-        </div>
+        <div class="stat-card c1"><div class="stat-label">Total Controls</div><div class="stat-value">93</div><div class="stat-desc">Annex A · 2022 edition</div><div class="progress-bar-wrap"><div class="progress-bar" style="width:100%"></div></div></div>
+        <div class="stat-card c2"><div class="stat-label">Organizational</div><div class="stat-value">37</div><div class="stat-desc">A.5.1 – A.5.37</div><div class="progress-bar-wrap"><div class="progress-bar" style="width:40%;background:var(--accent2)"></div></div></div>
+        <div class="stat-card c3"><div class="stat-label">Technological</div><div class="stat-value">34</div><div class="stat-desc">A.8.1 – A.8.34</div><div class="progress-bar-wrap"><div class="progress-bar" style="width:36%;background:var(--accent3)"></div></div></div>
+        <div class="stat-card c4"><div class="stat-label">New in 2022</div><div class="stat-value">11</div><div class="stat-desc">Cloud · Threat Intel · DLP</div><div class="progress-bar-wrap"><div class="progress-bar" style="width:12%;background:var(--warn)"></div></div></div>
       </div>
-
       <div class="feature-grid">
-        <div class="feature-card" onclick="nav('heatmap', null)">
-          <span class="fc-icon">▦</span>
-          <div class="fc-title">Compliance Heatmap</div>
-          <div class="fc-desc">Visual grid of all 93 controls. Mark implemented, partial, gap or N/A. See your posture at a glance.</div>
-          <span class="fc-tag live">● live</span>
-          <span class="fc-arrow">→</span>
-        </div>
-        <div class="feature-card" onclick="nav('controls', null)">
-          <span class="fc-icon">◈</span>
-          <div class="fc-title">Controls Guide</div>
-          <div class="fc-desc">Every control in plain English. Filter by your role. Stack-specific implementation guides for AWS, GitHub, K8s.</div>
-          <span class="fc-tag live">● live</span>
-          <span class="fc-arrow">→</span>
-        </div>
-        <div class="feature-card" onclick="nav('risk', null)">
-          <span class="fc-icon">◎</span>
-          <div class="fc-title">Risk Register</div>
-          <div class="fc-desc">Add assets, score likelihood × impact. Auto-prioritised risk register. Export to CSV or PDF.</div>
-          <span class="fc-tag live">● live</span>
-          <span class="fc-arrow">→</span>
-        </div>
-        <div class="feature-card" onclick="nav('diff', null)">
-          <span class="fc-icon">⇄</span>
-          <div class="fc-title">2013 → 2022 Diff</div>
-          <div class="fc-desc">Side-by-side migration view. See what merged, what's new, what's renamed. Critical for teams transitioning.</div>
-          <span class="fc-tag live">● live</span>
-          <span class="fc-arrow">→</span>
-        </div>
-        <div class="feature-card">
-          <span class="fc-icon">◉</span>
-          <div class="fc-title">SoA Generator</div>
-          <div class="fc-desc">Auto-generate your Statement of Applicability. The mandatory cert doc — consultants charge thousands for this.</div>
-          <span class="fc-tag soon">coming soon</span>
-        </div>
-        <div class="feature-card">
-          <span class="fc-icon">⚠</span>
-          <div class="fc-title">Threat Mapper</div>
-          <div class="fc-desc">Pick a real attack scenario. Instantly see which controls would have prevented it and what you're missing.</div>
-          <span class="fc-tag soon">coming soon</span>
-        </div>
+        <div class="feature-card" onclick="nav('heatmap',null)"><span class="fc-icon">▦</span><div class="fc-title">Compliance Heatmap</div><div class="fc-desc">Visual grid of all 93 controls. Click to mark status. See your posture at a glance.</div><span class="fc-tag live">● live</span><span class="fc-arrow">→</span></div>
+        <div class="feature-card" onclick="nav('controls',null)"><span class="fc-icon">◈</span><div class="fc-title">Controls Guide</div><div class="fc-desc">Every control in plain English. Filter by your role.</div><span class="fc-tag live">● live</span><span class="fc-arrow">→</span></div>
+        <div class="feature-card" onclick="nav('risk',null)"><span class="fc-icon">◎</span><div class="fc-title">Risk Register</div><div class="fc-desc">Add assets, score likelihood × impact. Auto-prioritised. Export to CSV or PDF.</div><span class="fc-tag live">● live</span><span class="fc-arrow">→</span></div>
+        <div class="feature-card" onclick="nav('posture',null)"><span class="fc-icon">◈</span><div class="fc-title">Posture Score</div><div class="fc-desc">15 questions → radar chart of your ISMS maturity across all 4 Annex A domains.</div><span class="fc-tag live">● new v0.2</span><span class="fc-arrow">→</span></div>
+        <div class="feature-card" onclick="nav('soa',null)"><span class="fc-icon">◉</span><div class="fc-title">SoA Generator</div><div class="fc-desc">Auto-generate your Statement of Applicability — the mandatory cert doc. Free forever.</div><span class="fc-tag live">● new v0.2</span><span class="fc-arrow">→</span></div>
+        <div class="feature-card" onclick="nav('threats',null)"><span class="fc-icon">⚠</span><div class="fc-title">Threat Mapper</div><div class="fc-desc">Pick a real attack scenario → see which controls prevent it and your exact gaps.</div><span class="fc-tag live">● new v0.2</span><span class="fc-arrow">→</span></div>
+        <div class="feature-card" onclick="nav('evidence',null)"><span class="fc-icon">◻</span><div class="fc-title">Evidence Wizard</div><div class="fc-desc">Per-control checklist of exactly what an auditor will ask for. Walk in prepared.</div><span class="fc-tag live">● new v0.2</span><span class="fc-arrow">→</span></div>
+        <div class="feature-card" onclick="nav('diff',null)"><span class="fc-icon">⇄</span><div class="fc-title">2013 → 2022 Diff</div><div class="fc-desc">Side-by-side migration view. New, merged, renamed. Critical for teams transitioning.</div><span class="fc-tag live">● live</span><span class="fc-arrow">→</span></div>
       </div>
-
       <div class="terminal-block">
         <span class="cmt"># annexa is fully offline — all data stays in your browser</span><br>
-        <span class="cmd">localStorage.getItem</span>(<span style="color:#f59e0b">'annexa_risks'</span>)  <span class="cmt">// your risk register, local only</span><br>
-        <span class="cmd">localStorage.getItem</span>(<span style="color:#f59e0b">'annexa_controls'</span>) <span class="cmt">// your control statuses, local only</span><br>
+        <span class="cmd">localStorage.getItem</span>(<span style="color:#f59e0b">'annexa_risks'</span>)      <span class="cmt">// your risk register, local only</span><br>
+        <span class="cmd">localStorage.getItem</span>(<span style="color:#f59e0b">'annexa_controls'</span>)    <span class="cmt">// your control statuses, local only</span><br>
+        <span class="cmd">localStorage.getItem</span>(<span style="color:#f59e0b">'annexa_soa'</span>)         <span class="cmt">// your SoA decisions, local only</span><br>
         <span class="ok">✓</span> zero data sent to any server &nbsp;·&nbsp; <span class="ok">✓</span> no tracking &nbsp;·&nbsp; <span class="ok">✓</span> no analytics &nbsp;·&nbsp; <span class="ok">✓</span> open source
       </div>
     </div>
 
-    <!-- ══ HEATMAP ══ -->
+    <!-- HEATMAP -->
     <div class="page" id="page-heatmap">
       <div class="page-header">
         <div class="page-title">Compliance <span class="hl">Heatmap</span></div>
-        <div class="page-subtitle">Click any cell to set its status. Your progress is saved locally.</div>
+        <div class="page-subtitle">Click any cell to cycle: Not Assessed → Implemented → Partial → Gap → N/A. Auto-saved.</div>
       </div>
-
       <div class="heatmap-controls">
         <div class="filter-group" id="domain-filters">
-          <button class="filter-btn active" onclick="filterDomain('all', this)">All 93</button>
-          <button class="filter-btn" onclick="filterDomain('org', this)">Organizational (37)</button>
-          <button class="filter-btn" onclick="filterDomain('ppl', this)">People (8)</button>
-          <button class="filter-btn" onclick="filterDomain('phys', this)">Physical (14)</button>
-          <button class="filter-btn" onclick="filterDomain('tech', this)">Technological (34)</button>
+          <button class="filter-btn active" onclick="filterDomain('all',this)">All 93</button>
+          <button class="filter-btn" onclick="filterDomain('org',this)">Organizational (37)</button>
+          <button class="filter-btn" onclick="filterDomain('ppl',this)">People (8)</button>
+          <button class="filter-btn" onclick="filterDomain('phys',this)">Physical (14)</button>
+          <button class="filter-btn" onclick="filterDomain('tech',this)">Technological (34)</button>
         </div>
+        <button class="btn-secondary" style="margin-left:auto" onclick="exportHeatmapPDF()">↓ Export PDF</button>
       </div>
-
       <div class="heatmap-grid" id="heatmap-grid"></div>
-
       <div class="heatmap-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(16,185,129,0.4)"></div>Implemented</div>
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(245,158,11,0.4)"></div>Partial</div>
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(239,68,68,0.4)"></div>Gap</div>
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.06)"></div>Not assessed</div>
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.02); border:1px solid #2a2a40"></div>N/A</div>
-      </div>
-
-      <hr class="section-divider">
-      <div style="font-size:11px; color:var(--text3); font-family:var(--font-mono)">
-        Tip: Click a cell to cycle through statuses. Your selections are saved in your browser — no account needed.
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(16,185,129,.4)"></div>Implemented</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(245,158,11,.4)"></div>Partial</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(239,68,68,.4)"></div>Gap</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,.06)"></div>Not assessed</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,.02);border:1px solid #2a2a40"></div>N/A</div>
       </div>
     </div>
 
-    <!-- ══ CONTROLS GUIDE ══ -->
+    <!-- CONTROLS -->
     <div class="page" id="page-controls">
       <div class="page-header">
         <div class="page-title">Controls <span class="hl">Guide</span></div>
-        <div class="page-subtitle">Select your role to filter controls relevant to you. Plain English. No ISO jargon.</div>
+        <div class="page-subtitle">Select your role. Plain English. No ISO jargon.</div>
       </div>
-
       <div class="role-selector">
-        <button class="role-btn active" onclick="filterRole('all', this)">⬡ All Roles</button>
-        <button class="role-btn" onclick="filterRole('devops', this)">⚙ DevOps Engineer</button>
-        <button class="role-btn" onclick="filterRole('backend', this)">◈ Backend Developer</button>
-        <button class="role-btn" onclick="filterRole('security', this)">◎ Security Analyst</button>
-        <button class="role-btn" onclick="filterRole('sysadmin', this)">▦ System Admin</button>
-        <button class="role-btn" onclick="filterRole('grc', this)">◉ GRC / Compliance</button>
+        <button class="role-btn active" onclick="filterRole('all',this)">⬡ All</button>
+        <button class="role-btn" onclick="filterRole('devops',this)">⚙ DevOps</button>
+        <button class="role-btn" onclick="filterRole('backend',this)">◈ Backend Dev</button>
+        <button class="role-btn" onclick="filterRole('security',this)">◎ Security</button>
+        <button class="role-btn" onclick="filterRole('sysadmin',this)">▦ SysAdmin</button>
+        <button class="role-btn" onclick="filterRole('grc',this)">◉ GRC</button>
       </div>
-
       <div class="controls-list" id="controls-list"></div>
     </div>
 
-    <!-- ══ RISK REGISTER ══ -->
+    <!-- RISK -->
     <div class="page" id="page-risk">
       <div class="page-header">
         <div class="page-title">Risk <span class="hl">Register</span></div>
-        <div class="page-subtitle">Add assets, score risks. Auto-calculated severity. Saved locally. Export ready.</div>
+        <div class="page-subtitle">Score risks. Auto-sorted by severity. Saved locally. Export to CSV or PDF.</div>
       </div>
-
       <div class="risk-form">
         <div class="form-title">Add New Risk</div>
+        <div class="form-row"><label class="form-label">Asset / System</label><input class="form-input" id="risk-asset" placeholder="e.g. Production Database, GitHub Repo, AWS S3"/></div>
+        <div class="form-row"><label class="form-label">Risk Description</label><textarea class="form-textarea" id="risk-desc" placeholder="Describe the risk scenario..."></textarea></div>
         <div class="form-row">
-          <label class="form-label">Asset / System</label>
-          <input class="form-input" id="risk-asset" placeholder="e.g. Production Database, GitHub Repo, AWS S3 Bucket" />
+          <label class="form-label">Likelihood <span style="color:var(--text3)">(1=rare · 5=almost certain)</span></label>
+          <div class="slider-row"><input type="range" class="form-slider" id="risk-likelihood" min="1" max="5" value="3" oninput="updateScore()"><div class="slider-val" id="likelihood-val">3</div></div>
         </div>
         <div class="form-row">
-          <label class="form-label">Risk Description</label>
-          <textarea class="form-textarea" id="risk-desc" placeholder="Describe the risk scenario in plain English..."></textarea>
+          <label class="form-label">Impact <span style="color:var(--text3)">(1=negligible · 5=catastrophic)</span></label>
+          <div class="slider-row"><input type="range" class="form-slider" id="risk-impact" min="1" max="5" value="3" oninput="updateScore()"><div class="slider-val" id="impact-val">3</div></div>
         </div>
-        <div class="form-row">
-          <label class="form-label">Likelihood &nbsp;<span style="color:var(--text3)">(1 = rare, 5 = almost certain)</span></label>
-          <div class="slider-row">
-            <input type="range" class="form-slider" id="risk-likelihood" min="1" max="5" value="3" oninput="updateScore()">
-            <div class="slider-val" id="likelihood-val">3</div>
-          </div>
+        <div class="form-row"><label class="form-label">Risk Score</label><div style="font-family:var(--font-ui);font-size:28px;font-weight:800;color:var(--accent)" id="risk-score-display">9 — Medium</div></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-primary" onclick="addRisk()">+ Add to Register</button>
+          <button class="btn-secondary" onclick="exportRiskCSV()">↓ Export CSV</button>
+          <button class="btn-secondary" onclick="exportRiskPDF()">↓ Export PDF</button>
         </div>
-        <div class="form-row">
-          <label class="form-label">Impact &nbsp;<span style="color:var(--text3)">(1 = negligible, 5 = catastrophic)</span></label>
-          <div class="slider-row">
-            <input type="range" class="form-slider" id="risk-impact" min="1" max="5" value="3" oninput="updateScore()">
-            <div class="slider-val" id="impact-val">3</div>
-          </div>
-        </div>
-        <div class="form-row">
-          <label class="form-label">Risk Score</label>
-          <div style="font-family:var(--font-ui); font-size:28px; font-weight:800; color:var(--accent)" id="risk-score-display">9 — Medium</div>
-        </div>
-        <button class="btn-primary" onclick="addRisk()">+ Add to Register</button>
       </div>
-
       <div class="risk-register">
-        <div class="rr-header">
-          <div>Asset / Risk</div>
-          <div>Likelihood</div>
-          <div>Impact</div>
-          <div>Score</div>
-          <div>Severity</div>
-        </div>
+        <div class="rr-header"><div>Asset / Risk</div><div>Likelihood</div><div>Impact</div><div>Score</div><div>Severity</div><div></div></div>
         <div id="risk-rows"></div>
       </div>
     </div>
 
-    <!-- ══ DIFF VIEWER ══ -->
+    <!-- DIFF -->
     <div class="page" id="page-diff">
       <div class="page-header">
         <div class="page-title">2013 <span class="hl">→</span> 2022 Migration</div>
-        <div class="page-subtitle">What changed, what merged, what's new. Critical for teams transitioning from ISO 27001:2013.</div>
+        <div class="page-subtitle">What changed, merged, renamed, or is entirely new. Critical for teams transitioning.</div>
       </div>
-
       <div class="heatmap-controls">
-        <div class="filter-group">
-          <button class="filter-btn active" onclick="filterDiff('all', this)">All Changes</button>
-          <button class="filter-btn" onclick="filterDiff('new', this)">🟢 New (11)</button>
-          <button class="filter-btn" onclick="filterDiff('merged', this)">🟣 Merged</button>
-          <button class="filter-btn" onclick="filterDiff('renamed', this)">🔵 Renamed</button>
-          <button class="filter-btn" onclick="filterDiff('same', this)">⬜ Unchanged</button>
+        <div class="filter-group" id="diff-filters">
+          <button class="filter-btn active" onclick="filterDiff('all',this)">All</button>
+          <button class="filter-btn" onclick="filterDiff('new',this)">🟢 New (11)</button>
+          <button class="filter-btn" onclick="filterDiff('merged',this)">🟣 Merged</button>
+          <button class="filter-btn" onclick="filterDiff('renamed',this)">🔵 Renamed</button>
+          <button class="filter-btn" onclick="filterDiff('same',this)">⬜ Unchanged</button>
         </div>
       </div>
-
       <div id="diff-list"></div>
     </div>
 
-    <!-- ══ COMING SOON PAGES ══ -->
+    <!-- POSTURE SCORE -->
+    <div class="page" id="page-posture">
+      <div class="page-header">
+        <div class="page-title">Security Posture <span class="hl">Score</span></div>
+        <div class="page-subtitle">Answer honestly. Get a radar chart of your ISMS maturity across all 4 Annex A domains. Export as PDF.</div>
+      </div>
+      <div id="posture-form-wrap">
+        <div class="posture-questions" id="posture-questions"></div>
+        <button class="btn-primary" onclick="calcPosture()">Calculate My Score →</button>
+      </div>
+      <div id="posture-result" style="display:none">
+        <div class="score-grid" id="score-grid"></div>
+        <div class="radar-wrap"><canvas id="radarChart" width="420" height="420"></canvas></div>
+        <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+          <button class="btn-primary" onclick="exportPosturePDF()">↓ Export PDF Report</button>
+          <button class="btn-secondary" onclick="resetPosture()">↺ Retake Assessment</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOA -->
     <div class="page" id="page-soa">
       <div class="page-header">
         <div class="page-title">SoA <span class="hl">Generator</span></div>
-        <div class="page-subtitle">Auto-generate your Statement of Applicability document.</div>
+        <div class="page-subtitle">Statement of Applicability — mandatory for ISO 27001 certification. Mark each control applicable or not, add your justification. Export when ready.</div>
       </div>
-      <div class="coming-soon">
-        <div class="cs-icon">◉</div>
-        <div class="cs-title">Coming in v0.2</div>
-        <div class="cs-sub">Mark each control as applicable / not applicable → auto-generates a<br>professional SoA document ready for your ISO 27001 certification audit.</div>
+      <div class="soa-stats" id="soa-stats"></div>
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="exportSoAPDF()">↓ Export SoA as PDF</button>
+        <button class="btn-secondary" onclick="exportSoACSV()">↓ Export CSV</button>
+        <button class="btn-secondary" onclick="soaMarkAll('applicable')">✓ Mark All Applicable</button>
       </div>
-    </div>
-
-    <div class="page" id="page-posture">
-      <div class="page-header">
-        <div class="page-title">Posture <span class="hl">Score</span></div>
-      </div>
-      <div class="coming-soon">
-        <div class="cs-icon">◈</div>
-        <div class="cs-title">Coming in v0.2</div>
-        <div class="cs-sub">Answer 15 questions → get a radar chart of your security posture<br>across all 4 Annex A domains. Screenshot-worthy. Shareable.</div>
+      <div class="soa-table">
+        <div class="soa-header"><div>Control</div><div>Name</div><div>Applicable?</div><div>Justification / Notes</div></div>
+        <div id="soa-rows"></div>
       </div>
     </div>
 
+    <!-- THREATS -->
     <div class="page" id="page-threats">
       <div class="page-header">
         <div class="page-title">Threat <span class="hl">Mapper</span></div>
+        <div class="page-subtitle">Pick a real-world attack scenario → see which ISO 27001 controls prevent it and exactly where your gaps are.</div>
       </div>
-      <div class="coming-soon">
-        <div class="cs-icon">⚠</div>
-        <div class="cs-title">Coming in v0.2</div>
-        <div class="cs-sub">Pick a real attack scenario → see which controls prevent it<br>and which gaps you need to close.</div>
+      <div class="threat-grid" id="threat-grid"></div>
+      <div class="threat-result" id="threat-result">
+        <div class="tr-section">
+          <div class="tr-section-title">Controls that PREVENT this attack</div>
+          <div id="tr-prevents"></div>
+        </div>
+        <div class="tr-section" style="margin-top:20px">
+          <div class="tr-section-title" style="color:var(--danger)">Gaps — what you still need to implement</div>
+          <div id="tr-gaps"></div>
+        </div>
       </div>
     </div>
 
+    <!-- EVIDENCE -->
     <div class="page" id="page-evidence">
       <div class="page-header">
         <div class="page-title">Evidence <span class="hl">Wizard</span></div>
+        <div class="page-subtitle">Select a control → get the exact evidence checklist an ISO 27001 auditor will ask for. Tick items off as you collect them.</div>
       </div>
-      <div class="coming-soon">
-        <div class="cs-icon">◻</div>
-        <div class="cs-title">Coming in v0.2</div>
-        <div class="cs-sub">Per-control guide: exactly what files, screenshots and logs<br>an auditor will ask for. Walk in prepared.</div>
+      <div class="ev-select-wrap">
+        <label class="form-label">Select Control</label>
+        <select class="form-select" id="ev-select" onchange="loadEvidence()">
+          <option value="">— Choose a control —</option>
+        </select>
       </div>
-    </div>
-
-    <div class="page" id="page-snippets">
-      <div class="page-header">
-        <div class="page-title">Code <span class="hl">Snippets</span></div>
-      </div>
-      <div class="coming-soon">
-        <div class="cs-icon">&lt;/&gt;</div>
-        <div class="cs-title">Coming in v0.2</div>
-        <div class="cs-sub">Compliance-as-code. Ready-to-use Terraform, GitHub Actions,<br>bash scripts — one per technical control.</div>
-      </div>
+      <div id="ev-result"></div>
     </div>
 
   </main>
 </div>
 
 <script>
-// ── DATA ──────────────────────────────────────────────────────────────────
-
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ DATA ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const CONTROLS = [
-  // Organizational
-  { id:'A.5.1',  name:'Information Security Policies',       domain:'org',  plain:'Have a written security policy. Review it at least once a year.',                         roles:['grc','security'] },
-  { id:'A.5.2',  name:'Information Security Roles',          domain:'org',  plain:'Define who owns security responsibilities. Someone must be accountable.',                  roles:['grc'] },
-  { id:'A.5.7',  name:'Threat Intelligence',                 domain:'org',  plain:'Collect and act on threat intel relevant to your systems. New in 2022.',                   roles:['security','devops'] },
-  { id:'A.5.9',  name:'Asset Inventory',                     domain:'org',  plain:'Maintain a list of all information assets: servers, repos, databases, SaaS tools.',        roles:['devops','sysadmin','grc'] },
-  { id:'A.5.10', name:'Acceptable Use of Assets',            domain:'org',  plain:'Define rules for how employees can use company systems and data.',                         roles:['grc'] },
-  { id:'A.5.12', name:'Classification of Information',       domain:'org',  plain:'Label data: Public, Internal, Confidential, Restricted. Apply consistently.',             roles:['backend','grc','security'] },
-  { id:'A.5.14', name:'Information Transfer',                domain:'org',  plain:'Secure rules for sending data externally — email, file sharing, APIs.',                   roles:['backend','security'] },
-  { id:'A.5.15', name:'Access Control',                      domain:'org',  plain:'Control who can access what. Principle of least privilege. Review regularly.',            roles:['devops','sysadmin','backend','security'] },
-  { id:'A.5.23', name:'Cloud Services Security',             domain:'org',  plain:'Define security requirements for cloud providers (AWS, GCP, Azure). New in 2022.',        roles:['devops','sysadmin','security'] },
-  { id:'A.5.24', name:'Incident Management Planning',        domain:'org',  plain:'Have an incident response plan. Know what to do when something goes wrong.',              roles:['devops','security','grc'] },
-  { id:'A.5.25', name:'Incident Assessment',                 domain:'org',  plain:'Classify and prioritise security events when they occur.',                                roles:['security','grc'] },
-  { id:'A.5.30', name:'ICT Continuity',                      domain:'org',  plain:'Ensure your IT systems can recover during disruptions. New in 2022.',                     roles:['devops','sysadmin'] },
-  { id:'A.5.34', name:'Privacy Protection',                  domain:'org',  plain:'Implement technical and org measures to protect personal data (GDPR alignment).',        roles:['backend','grc','security'] },
-  { id:'A.5.36', name:'Compliance with Policies',            domain:'org',  plain:'Verify that security policies are actually being followed — not just written.',          roles:['grc'] },
-  // People
-  { id:'A.6.1',  name:'Screening',                           domain:'ppl',  plain:'Background check employees before hiring. Especially for privileged access roles.',       roles:['grc'] },
-  { id:'A.6.3',  name:'Security Awareness Training',         domain:'ppl',  plain:'Train all staff on security basics. Do it regularly, not just at onboarding.',           roles:['grc','security'] },
-  { id:'A.6.4',  name:'Disciplinary Process',                domain:'ppl',  plain:'Have consequences defined for security policy violations.',                               roles:['grc'] },
-  { id:'A.6.5',  name:'Offboarding Security',                domain:'ppl',  plain:'When someone leaves: revoke all access, recover devices, change shared credentials.',    roles:['sysadmin','devops','grc'] },
-  { id:'A.6.7',  name:'Remote Work',                         domain:'ppl',  plain:'Security rules for remote/hybrid workers. VPN, screen lock, home network guidelines.',   roles:['grc','sysadmin'] },
-  { id:'A.6.8',  name:'Security Event Reporting',            domain:'ppl',  plain:'Easy way for anyone to report a security incident or suspicious activity.',              roles:['grc','security'] },
-  // Physical
-  { id:'A.7.1',  name:'Physical Security Perimeters',        domain:'phys', plain:'Secure physical areas: office, server room, data centre.',                               roles:['sysadmin','grc'] },
-  { id:'A.7.2',  name:'Physical Entry Controls',             domain:'phys', plain:'Control who can physically enter sensitive areas. Badge access, visitor logs.',          roles:['sysadmin','grc'] },
-  { id:'A.7.4',  name:'Physical Security Monitoring',        domain:'phys', plain:'CCTV and physical intrusion detection for sensitive areas. New in 2022.',                roles:['sysadmin'] },
-  { id:'A.7.8',  name:'Equipment Siting',                    domain:'phys', plain:'Place hardware away from environmental hazards and unauthorised viewing.',               roles:['sysadmin'] },
-  { id:'A.7.10', name:'Storage Media Security',              domain:'phys', plain:'Secure handling, transport and disposal of hard drives, USBs, backups.',                 roles:['sysadmin','devops'] },
-  { id:'A.7.14', name:'Secure Disposal',                     domain:'phys', plain:'Wipe or physically destroy storage media before disposal. No dumpster dives.',          roles:['sysadmin'] },
-  // Technological
-  { id:'A.8.1',  name:'User Endpoint Devices',               domain:'tech', plain:'Security controls on laptops and phones: encryption, MDM, screen lock, patching.',      roles:['sysadmin','devops'] },
-  { id:'A.8.2',  name:'Privileged Access',                   domain:'tech', plain:'Tightly control admin access. Use PAM tools, separate admin accounts, log everything.', roles:['sysadmin','devops','security'] },
-  { id:'A.8.3',  name:'Information Access Restriction',      domain:'tech', plain:'Role-based access controls. Users only see what they need. Enforce in code and infra.',  roles:['backend','devops','security'] },
-  { id:'A.8.4',  name:'Source Code Access',                  domain:'tech', plain:'Control who can read and modify source code. Branch protections, code review required.', roles:['backend','devops'] },
-  { id:'A.8.5',  name:'Secure Authentication',               domain:'tech', plain:'Enforce MFA everywhere. Strong password policies. No shared credentials.',              roles:['backend','devops','sysadmin','security'] },
-  { id:'A.8.6',  name:'Capacity Management',                 domain:'tech', plain:'Monitor resource usage, plan for growth. Prevent denial of service from over-capacity.', roles:['devops','sysadmin'] },
-  { id:'A.8.7',  name:'Malware Protection',                  domain:'tech', plain:'Antivirus, EDR, email scanning, runtime protection. Keep signatures updated.',           roles:['sysadmin','security'] },
-  { id:'A.8.8',  name:'Vulnerability Management',            domain:'tech', plain:'Scan for vulns regularly. Have an SLA for patching: critical = 24h, high = 7 days.',    roles:['devops','security','sysadmin'] },
-  { id:'A.8.9',  name:'Configuration Management',            domain:'tech', plain:'Use IaC (Terraform, Ansible). Enforce secure defaults. No manual snowflake configs.',   roles:['devops','sysadmin'] },
-  { id:'A.8.10', name:'Information Deletion',                domain:'tech', plain:'Securely delete data when no longer needed. Implement data retention policies in code.', roles:['backend','devops','grc'] },
-  { id:'A.8.11', name:'Data Masking',                        domain:'tech', plain:'Mask PII in logs, test databases, dev environments. Never use real prod data in dev.',  roles:['backend','security'] },
-  { id:'A.8.12', name:'Data Leakage Prevention',             domain:'tech', plain:'DLP tools to prevent sensitive data leaving your perimeter. New in 2022.',              roles:['security','devops'] },
-  { id:'A.8.15', name:'Logging',                             domain:'tech', plain:'Log all security-relevant events. Centralise logs. Define retention period (min 1yr).', roles:['devops','sysadmin','security'] },
-  { id:'A.8.16', name:'Network Monitoring',                  domain:'tech', plain:'Monitor network traffic for anomalies. Alerts on unusual patterns.',                    roles:['devops','sysadmin','security'] },
-  { id:'A.8.20', name:'Network Security',                    domain:'tech', plain:'Firewalls, network segmentation, no flat networks. Zero trust where possible.',         roles:['devops','sysadmin','security'] },
-  { id:'A.8.21', name:'Web Filtering',                       domain:'tech', plain:'Filter outbound web traffic. Block malicious domains. New in 2022.',                    roles:['sysadmin','security'] },
-  { id:'A.8.23', name:'Secure Coding',                       domain:'tech', plain:'OWASP Top 10. SAST in CI/CD. Code review. Security unit tests. No hardcoded secrets.',  roles:['backend','devops'] },
-  { id:'A.8.24', name:'Cryptography',                        domain:'tech', plain:'Encrypt data at rest and in transit. Use TLS 1.2+. Manage keys in a KMS, not in code.', roles:['backend','devops','security'] },
-  { id:'A.8.25', name:'Secure Development Lifecycle',        domain:'tech', plain:'Security at every SDLC phase: design, code, test, deploy. Shift left.',                 roles:['backend','devops','security'] },
-  { id:'A.8.28', name:'Secure Coding Principles',            domain:'tech', plain:'Formal secure coding standards documented and enforced. Paired with A.8.23.',           roles:['backend'] },
-  { id:'A.8.29', name:'Security Testing',                    domain:'tech', plain:'Pen testing, DAST, vulnerability scanning. Pre-prod and production. New in 2022.',      roles:['security','devops','backend'] },
-  { id:'A.8.30', name:'Outsourced Development',              domain:'tech', plain:'Security requirements for third-party devs. Code review, NDA, access controls.',       roles:['backend','grc'] },
-  { id:'A.8.32', name:'Change Management',                   domain:'tech', plain:'Formal change process: review, test, approve, deploy. No cowboy changes to prod.',      roles:['devops','sysadmin'] },
-  { id:'A.8.34', name:'Protection During Testing',           domain:'tech', plain:'Do not use real sensitive data in test environments. Mask or synthesise test data.',    roles:['backend','devops'] },
+  {id:'A.5.1',name:'Information Security Policies',domain:'org',plain:'Have a written security policy signed by management. Review it at least annually.',roles:['grc','security']},
+  {id:'A.5.2',name:'Information Security Roles',domain:'org',plain:'Define who owns security responsibilities. Someone must be accountable. Document it formally.',roles:['grc']},
+  {id:'A.5.7',name:'Threat Intelligence',domain:'org',plain:'Collect and act on threat intel relevant to your systems. Subscribe to CVE feeds and sector alerts. NEW in 2022.',roles:['security','devops']},
+  {id:'A.5.9',name:'Asset Inventory',domain:'org',plain:'Maintain a list of all information assets: servers, repos, databases, SaaS tools. Keep it current.',roles:['devops','sysadmin','grc']},
+  {id:'A.5.10',name:'Acceptable Use of Assets',domain:'org',plain:'Define rules for how employees can use company systems and data. Document in policy.',roles:['grc']},
+  {id:'A.5.12',name:'Classification of Information',domain:'org',plain:'Label data: Public, Internal, Confidential, Restricted. Apply consistently across all systems.',roles:['backend','grc','security']},
+  {id:'A.5.14',name:'Information Transfer',domain:'org',plain:'Secure rules for sending data externally — email, file sharing, APIs, physical media.',roles:['backend','security']},
+  {id:'A.5.15',name:'Access Control',domain:'org',plain:'Control who can access what. Least privilege. Review access quarterly. Revoke on offboarding.',roles:['devops','sysadmin','backend','security']},
+  {id:'A.5.16',name:'Identity Management',domain:'org',plain:'Manage the full lifecycle of identities: creation, modification, disabling, deletion.',roles:['sysadmin','devops']},
+  {id:'A.5.17',name:'Authentication Information',domain:'org',plain:'Manage passwords and auth secrets securely. Use a password manager. Never share credentials.',roles:['sysadmin','devops','backend']},
+  {id:'A.5.18',name:'Access Rights',domain:'org',plain:'Provision, review and revoke access rights. Quarterly access reviews. Remove on offboarding.',roles:['sysadmin','devops','grc']},
+  {id:'A.5.23',name:'Cloud Services Security',domain:'org',plain:'Security requirements for cloud providers (AWS, GCP, Azure). Understand the shared responsibility model. NEW in 2022.',roles:['devops','sysadmin','security']},
+  {id:'A.5.24',name:'Incident Management Planning',domain:'org',plain:'Have a documented incident response plan. Know exactly what to do when something goes wrong. Test it.',roles:['devops','security','grc']},
+  {id:'A.5.25',name:'Incident Assessment',domain:'org',plain:'Classify and prioritise security events when they occur. Have a severity matrix defined.',roles:['security','grc']},
+  {id:'A.5.26',name:'Response to Incidents',domain:'org',plain:'Defined process to respond to security incidents. Who does what, when, and how.',roles:['security','devops','grc']},
+  {id:'A.5.28',name:'Evidence Collection',domain:'org',plain:'Collect and preserve evidence from security incidents. Chain of custody matters for legal proceedings.',roles:['security','grc']},
+  {id:'A.5.30',name:'ICT Continuity',domain:'org',plain:'Ensure IT systems can recover during disruptions. RTO and RPO defined. Backups tested. NEW in 2022.',roles:['devops','sysadmin']},
+  {id:'A.5.34',name:'Privacy Protection',domain:'org',plain:'Technical and organisational measures to protect personal data. GDPR alignment. Data minimisation.',roles:['backend','grc','security']},
+  {id:'A.5.36',name:'Compliance with Policies',domain:'org',plain:'Verify security policies are actually being followed — not just written. Regular checks.',roles:['grc']},
+  {id:'A.5.37',name:'Documented Operating Procedures',domain:'org',plain:'Document how security-related operations are performed. Runbooks, SOPs, playbooks.',roles:['devops','sysadmin','grc']},
+  {id:'A.6.1',name:'Screening',domain:'ppl',plain:'Background check employees before hiring, especially for privileged access roles.',roles:['grc']},
+  {id:'A.6.3',name:'Security Awareness Training',domain:'ppl',plain:'Train all staff on security basics. Do it regularly — not just at onboarding.',roles:['grc','security']},
+  {id:'A.6.4',name:'Disciplinary Process',domain:'ppl',plain:'Have defined consequences for security policy violations. Communicate them to all staff.',roles:['grc']},
+  {id:'A.6.5',name:'Offboarding Security',domain:'ppl',plain:'When someone leaves: revoke all access, recover devices, change shared credentials immediately.',roles:['sysadmin','devops','grc']},
+  {id:'A.6.7',name:'Remote Work',domain:'ppl',plain:'Security rules for remote workers. VPN, screen lock, home network, clean desk policy.',roles:['grc','sysadmin']},
+  {id:'A.6.8',name:'Security Event Reporting',domain:'ppl',plain:'Easy way for anyone to report a security incident or suspicious activity. No blame culture.',roles:['grc','security']},
+  {id:'A.7.1',name:'Physical Security Perimeters',domain:'phys',plain:'Secure physical areas: office, server room, data centre. Define and enforce access boundaries.',roles:['sysadmin','grc']},
+  {id:'A.7.2',name:'Physical Entry Controls',domain:'phys',plain:'Control who can physically enter sensitive areas. Badge access, visitor logs, escorted visitors.',roles:['sysadmin','grc']},
+  {id:'A.7.4',name:'Physical Security Monitoring',domain:'phys',plain:'CCTV and physical intrusion detection for sensitive areas. Alerts on breach. NEW in 2022.',roles:['sysadmin']},
+  {id:'A.7.6',name:'Working in Secure Areas',domain:'phys',plain:'Rules for working in sensitive areas: no phones, no unauthorised devices, need-to-know basis.',roles:['sysadmin','grc']},
+  {id:'A.7.8',name:'Equipment Siting',domain:'phys',plain:'Place hardware away from environmental hazards and unauthorised viewing.',roles:['sysadmin']},
+  {id:'A.7.10',name:'Storage Media Security',domain:'phys',plain:'Secure handling, transport and disposal of drives, USBs, backups. Encrypted at rest.',roles:['sysadmin','devops']},
+  {id:'A.7.11',name:'Supporting Utilities',domain:'phys',plain:'UPS, generator, HVAC for critical infrastructure. No single point of failure on power.',roles:['sysadmin']},
+  {id:'A.7.14',name:'Secure Disposal',domain:'phys',plain:'Wipe or physically destroy storage media before disposal. Certificate of destruction for sensitive hardware.',roles:['sysadmin']},
+  {id:'A.8.1',name:'User Endpoint Devices',domain:'tech',plain:'Security on laptops/phones: full disk encryption, MDM, screen lock, patching policy.',roles:['sysadmin','devops']},
+  {id:'A.8.2',name:'Privileged Access',domain:'tech',plain:'Tightly control admin access. Use PAM tools, separate admin accounts, log all privileged actions.',roles:['sysadmin','devops','security']},
+  {id:'A.8.3',name:'Information Access Restriction',domain:'tech',plain:'Role-based access controls. Users only see what they need. Enforce in code and infrastructure.',roles:['backend','devops','security']},
+  {id:'A.8.4',name:'Source Code Access',domain:'tech',plain:'Control who can read and modify source code. Branch protections, code review required, signed commits.',roles:['backend','devops']},
+  {id:'A.8.5',name:'Secure Authentication',domain:'tech',plain:'Enforce MFA everywhere. Strong password policy. No shared credentials. SSO where possible.',roles:['backend','devops','sysadmin','security']},
+  {id:'A.8.6',name:'Capacity Management',domain:'tech',plain:'Monitor resource usage, plan for growth. Auto-scaling. Prevent denial of service from over-capacity.',roles:['devops','sysadmin']},
+  {id:'A.8.7',name:'Malware Protection',domain:'tech',plain:'Antivirus, EDR, email scanning, runtime protection on all endpoints. Keep signatures updated.',roles:['sysadmin','security']},
+  {id:'A.8.8',name:'Vulnerability Management',domain:'tech',plain:'Scan for vulns regularly. SLA for patching: critical=24h, high=7d, medium=30d.',roles:['devops','security','sysadmin']},
+  {id:'A.8.9',name:'Configuration Management',domain:'tech',plain:'Use IaC (Terraform, Ansible). Enforce secure defaults. No manual configs. Git-tracked.',roles:['devops','sysadmin']},
+  {id:'A.8.10',name:'Information Deletion',domain:'tech',plain:'Securely delete data when no longer needed. Data retention policies enforced in code. NEW in 2022.',roles:['backend','devops','grc']},
+  {id:'A.8.11',name:'Data Masking',domain:'tech',plain:'Mask PII in logs, test databases, dev environments. Never use real prod data in dev. NEW in 2022.',roles:['backend','security']},
+  {id:'A.8.12',name:'Data Leakage Prevention',domain:'tech',plain:'DLP tools to prevent sensitive data leaving your perimeter. Email DLP, endpoint DLP. NEW in 2022.',roles:['security','devops']},
+  {id:'A.8.15',name:'Logging',domain:'tech',plain:'Log all security-relevant events. Centralise logs (SIEM). Retention min 1 year. Tamper-proof.',roles:['devops','sysadmin','security']},
+  {id:'A.8.16',name:'Network Monitoring',domain:'tech',plain:'Monitor network traffic for anomalies. IDS/IPS. Alerts on unusual patterns. NEW in 2022.',roles:['devops','sysadmin','security']},
+  {id:'A.8.20',name:'Network Security',domain:'tech',plain:'Firewalls, network segmentation, no flat networks. Zero trust architecture where possible.',roles:['devops','sysadmin','security']},
+  {id:'A.8.21',name:'Web Filtering',domain:'tech',plain:'Filter outbound web traffic. Block malicious domains. DNS filtering. NEW in 2022.',roles:['sysadmin','security']},
+  {id:'A.8.23',name:'Secure Coding',domain:'tech',plain:'OWASP Top 10. SAST in CI/CD. Mandatory code review. No hardcoded secrets. Security unit tests.',roles:['backend','devops']},
+  {id:'A.8.24',name:'Cryptography',domain:'tech',plain:'Encrypt data at rest and in transit. TLS 1.2+ minimum. Keys in KMS. Key rotation policy.',roles:['backend','devops','security']},
+  {id:'A.8.25',name:'Secure Development Lifecycle',domain:'tech',plain:'Security at every SDLC phase: threat modelling at design, SAST in code, DAST in testing.',roles:['backend','devops','security']},
+  {id:'A.8.28',name:'Secure Coding Principles',domain:'tech',plain:'Formal secure coding standards documented and enforced. Input validation, error handling, least privilege in code.',roles:['backend']},
+  {id:'A.8.29',name:'Security Testing',domain:'tech',plain:'Pen testing, DAST, vulnerability scanning. Pre-production and production. Annual minimum. NEW in 2022.',roles:['security','devops','backend']},
+  {id:'A.8.30',name:'Outsourced Development',domain:'tech',plain:'Security requirements for third-party devs. Code review, NDA, access controls, SDLC standards enforced.',roles:['backend','grc']},
+  {id:'A.8.32',name:'Change Management',domain:'tech',plain:'Formal change process: review, test, approve, deploy. Change log. No cowboy changes to production.',roles:['devops','sysadmin']},
+  {id:'A.8.34',name:'Protection During Testing',domain:'tech',plain:'Do not use real sensitive data in test environments. Mask or synthesise test data. Isolation required.',roles:['backend','devops']},
 ];
 
 const DIFF_DATA = [
-  { old:'A.6.1.1 / A.6.1.2', oldName:'Information security roles & responsibilities', new:'A.5.2', newName:'Information Security Roles and Responsibilities', type:'renamed' },
-  { old:'A.12.1.2 + A.14.2.2', oldName:'Change management + System change control', new:'A.8.32', newName:'Change Management', type:'merged' },
-  { old:'A.9.1.1 + A.9.1.2', oldName:'Access control policy + Access to networks', new:'A.5.15', newName:'Access Control', type:'merged' },
-  { old:'A.12.4.1 + A.12.4.2 + A.12.4.3', oldName:'Event logging + Protection of logs + Admin logs', new:'A.8.15', newName:'Logging', type:'merged' },
-  { old:'A.10.1.1 + A.10.1.2', oldName:'Cryptographic controls policy + Key management', new:'A.8.24', newName:'Cryptography', type:'merged' },
-  { old:'—', oldName:'Did not exist', new:'A.5.7', newName:'Threat Intelligence', type:'new' },
-  { old:'—', oldName:'Did not exist', new:'A.5.23', newName:'Information Security for Cloud Services', type:'new' },
-  { old:'—', oldName:'Did not exist', new:'A.5.30', newName:'ICT Readiness for Business Continuity', type:'new' },
-  { old:'—', oldName:'Did not exist', new:'A.7.4', newName:'Physical Security Monitoring', type:'new' },
-  { old:'—', oldName:'Did not exist', new:'A.8.10', newName:'Information Deletion', type:'new' },
-  { old:'—', oldName:'Did not exist', new:'A.8.11', newName:'Data Masking', type:'new' },
-  { old:'—', oldName:'Did not exist', new:'A.8.12', newName:'Data Leakage Prevention', type:'new' },
-  { old:'—', oldName:'Did not exist', new:'A.8.16', newName:'Monitoring Activities', type:'new' },
-  { old:'—', oldName:'Did not exist', new:'A.8.21', newName:'Web Filtering', type:'new' },
-  { old:'—', oldName:'Did not exist', new:'A.8.28', newName:'Secure Coding', type:'new' },
-  { old:'—', oldName:'Did not exist', new:'A.8.29', newName:'Security Testing in Dev and Acceptance', type:'new' },
-  { old:'A.12.6.1', oldName:'Management of technical vulnerabilities', new:'A.8.8', newName:'Management of Technical Vulnerabilities', type:'same' },
-  { old:'A.14.2.1', oldName:'Secure development policy', new:'A.8.25', newName:'Secure Development Life Cycle', type:'same' },
-  { old:'A.9.4.2', oldName:'Secure log-on procedures', new:'A.8.5', newName:'Secure Authentication', type:'renamed' },
-  { old:'A.12.2.1', oldName:'Controls against malware', new:'A.8.7', newName:'Protection Against Malware', type:'same' },
+  {old:'A.6.1.1/A.6.1.2',oldName:'Info security roles & responsibilities',newId:'A.5.2',newName:'Information Security Roles',type:'renamed'},
+  {old:'A.12.1.2+A.14.2.2',oldName:'Change management + System change control',newId:'A.8.32',newName:'Change Management',type:'merged'},
+  {old:'A.9.1.1+A.9.1.2',oldName:'Access control policy + Access to networks',newId:'A.5.15',newName:'Access Control',type:'merged'},
+  {old:'A.12.4.1+A.12.4.2+A.12.4.3',oldName:'Event logging + Protection of logs + Admin logs',newId:'A.8.15',newName:'Logging',type:'merged'},
+  {old:'A.10.1.1+A.10.1.2',oldName:'Cryptographic controls + Key management',newId:'A.8.24',newName:'Cryptography',type:'merged'},
+  {old:'A.9.4.2',oldName:'Secure log-on procedures',newId:'A.8.5',newName:'Secure Authentication',type:'renamed'},
+  {old:'A.12.2.1',oldName:'Controls against malware',newId:'A.8.7',newName:'Protection Against Malware',type:'same'},
+  {old:'A.12.6.1',oldName:'Management of technical vulnerabilities',newId:'A.8.8',newName:'Management of Technical Vulnerabilities',type:'same'},
+  {old:'A.14.2.1',oldName:'Secure development policy',newId:'A.8.25',newName:'Secure Development Life Cycle',type:'same'},
+  {old:'—',oldName:'Did not exist in 2013',newId:'A.5.7',newName:'Threat Intelligence',type:'new'},
+  {old:'—',oldName:'Did not exist in 2013',newId:'A.5.23',newName:'Information Security for Cloud Services',type:'new'},
+  {old:'—',oldName:'Did not exist in 2013',newId:'A.5.30',newName:'ICT Readiness for Business Continuity',type:'new'},
+  {old:'—',oldName:'Did not exist in 2013',newId:'A.7.4',newName:'Physical Security Monitoring',type:'new'},
+  {old:'—',oldName:'Did not exist in 2013',newId:'A.8.10',newName:'Information Deletion',type:'new'},
+  {old:'—',oldName:'Did not exist in 2013',newId:'A.8.11',newName:'Data Masking',type:'new'},
+  {old:'—',oldName:'Did not exist in 2013',newId:'A.8.12',newName:'Data Leakage Prevention',type:'new'},
+  {old:'—',oldName:'Did not exist in 2013',newId:'A.8.16',newName:'Monitoring Activities',type:'new'},
+  {old:'—',oldName:'Did not exist in 2013',newId:'A.8.21',newName:'Web Filtering',type:'new'},
+  {old:'—',oldName:'Did not exist in 2013',newId:'A.8.28',newName:'Secure Coding',type:'new'},
+  {old:'—',oldName:'Did not exist in 2013',newId:'A.8.29',newName:'Security Testing in Dev and Acceptance',type:'new'},
 ];
 
-// ── STATE ─────────────────────────────────────────────────────────────────
+const POSTURE_QUESTIONS = [
+  {q:'Do you have a documented Information Security Policy signed off by management?',domain:'org'},
+  {q:'Is there a maintained asset inventory covering all systems, repos, cloud and SaaS tools?',domain:'org'},
+  {q:'Do you have a formal risk assessment process with a register reviewed regularly?',domain:'org'},
+  {q:'Are user access rights reviewed quarterly and revoked immediately on offboarding?',domain:'org'},
+  {q:'Do you have a documented incident response plan that has been tested in the last 12 months?',domain:'org'},
+  {q:'Is all staff given security awareness training at least annually?',domain:'ppl'},
+  {q:'Do you have a screening/background check process for new hires in sensitive roles?',domain:'ppl'},
+  {q:'Is multi-factor authentication enforced on all critical systems and remote access?',domain:'tech'},
+  {q:'Are all systems patched within defined SLAs (critical=24h, high=7d, medium=30d)?',domain:'tech'},
+  {q:'Is security testing (SAST, DAST, pen test) part of your development and release process?',domain:'tech'},
+  {q:'Are security-relevant events logged centrally with at least 1 year retention?',domain:'tech'},
+  {q:'Is data encrypted at rest and in transit across all production systems?',domain:'tech'},
+  {q:'Do you have network segmentation and firewall controls between sensitive system zones?',domain:'tech'},
+  {q:'Are physical access controls in place for server rooms and sensitive areas?',domain:'phys'},
+  {q:'Is storage media securely disposed of with a verifiable destruction process?',domain:'phys'},
+];
 
-let controlStatuses = JSON.parse(localStorage.getItem('annexa_controls') || '{}');
-let risks = JSON.parse(localStorage.getItem('annexa_risks') || '[]');
-const statusCycle = ['not-set', 'implemented', 'partial', 'gap', 'na'];
+const THREATS = [
+  {id:'leaked-keys',icon:'🔑',name:'Cloud credentials leaked to GitHub',desc:'AWS/GCP/Azure keys accidentally committed to a repository',
+   prevents:[{id:'A.8.4',why:'Branch protection and code review catches secrets before merge'},{id:'A.8.5',why:'MFA limits damage if credentials are used by an attacker'},{id:'A.8.23',why:'SAST tools detect hardcoded secrets in code pre-commit'},{id:'A.8.15',why:'Centralised logging detects unusual API usage from stolen keys'}],
+   gaps:[{id:'A.8.12',why:'DLP would have flagged the credential pattern before it left your network'},{id:'A.5.7',why:'Threat intel feeds alert on your credentials appearing in breach databases'},{id:'A.8.9',why:'Config management using secrets manager (not env vars) prevents the issue entirely'}]},
+  {id:'ransomware',icon:'🦠',name:'Ransomware attack on internal systems',desc:'Malicious software encrypts company data and demands payment',
+   prevents:[{id:'A.8.7',why:'EDR/antivirus detects and blocks ransomware execution patterns'},{id:'A.8.20',why:'Network segmentation limits lateral movement across systems'},{id:'A.8.32',why:'Change management prevents unauthorised software installation'}],
+   gaps:[{id:'A.5.30',why:'ICT continuity with tested backups is the ultimate ransomware recovery control'},{id:'A.8.8',why:'Unpatched systems are the #1 ransomware entry point — patch SLAs are critical'},{id:'A.6.3',why:'Phishing is the primary delivery method — staff training prevents initial access'}]},
+  {id:'insider',icon:'👤',name:'Disgruntled employee data exfiltration',desc:'A leaving or malicious employee copies sensitive data',
+   prevents:[{id:'A.5.18',why:'Regular access reviews detect excessive permissions before they are misused'},{id:'A.6.5',why:'Immediate access revocation on offboarding is the single most important control'},{id:'A.8.3',why:'Least privilege means the employee can only reach data they genuinely need'}],
+   gaps:[{id:'A.8.12',why:'DLP would detect and block bulk data transfers to personal accounts'},{id:'A.8.15',why:'SIEM alerts on anomalous data access patterns before exfiltration completes'},{id:'A.5.28',why:'Evidence collection procedures preserve audit trail for legal proceedings'}]},
+  {id:'phishing',icon:'🎣',name:'CEO phishing / Business email compromise',desc:'Attacker impersonates an executive to authorise fraud',
+   prevents:[{id:'A.6.3',why:'Security awareness training teaches staff to verify requests via secondary channel'},{id:'A.8.5',why:'MFA means stolen credentials alone cannot access email accounts'},{id:'A.8.7',why:'Email security gateways filter spoofed and malicious emails'}],
+   gaps:[{id:'A.5.24',why:'Without an incident response plan the team panics and amplifies the damage'},{id:'A.5.1',why:'A policy covering financial approval procedures prevents wire fraud'},{id:'A.5.7',why:'Threat intel helps identify active phishing campaigns targeting your industry'}]},
+  {id:'sqli',icon:'💉',name:'SQL injection / Web application attack',desc:'Attacker exploits input validation flaws to access the database',
+   prevents:[{id:'A.8.23',why:'Secure coding (parameterised queries) prevents SQL injection at the source'},{id:'A.8.29',why:'DAST and pen testing find the vulnerability before attackers do'},{id:'A.8.25',why:'Secure SDLC includes threat modelling that identifies injection risks at design time'}],
+   gaps:[{id:'A.8.8',why:'Unpatched web frameworks are a common SQL injection vector'},{id:'A.8.20',why:'WAF at the network layer blocks known attack signatures'},{id:'A.8.15',why:'Without logging you cannot detect, investigate or scope a SQLi attack'}]},
+  {id:'supply-chain',icon:'📦',name:'Supply chain / Third-party compromise',desc:'A dependency or outsourced developer introduces malicious code',
+   prevents:[{id:'A.5.9',why:'Asset inventory including all third-party dependencies enables rapid response'},{id:'A.8.30',why:'Security requirements for outsourced developers mandates their security standards'},{id:'A.8.23',why:'SAST and SCA dependency scanning in CI/CD detects malicious packages'}],
+   gaps:[{id:'A.5.7',why:'Threat intel and CVE monitoring gives early warning of compromised dependencies'},{id:'A.8.8',why:'Without a patching process, known-malicious versions stay in production'},{id:'A.5.23',why:'Cloud service security requirements define minimum standards for SaaS providers'}]},
+];
 
-// ── NAVIGATION ────────────────────────────────────────────────────────────
+const EVIDENCE = {
+  'A.8.5':{name:'Secure Authentication',items:[
+    {title:'MFA enforcement screenshot',desc:'Screenshot from your IdP (Okta, Azure AD, Google Workspace) showing MFA enforced for all users',type:'screenshot'},
+    {title:'Password policy document',desc:'Written policy defining minimum length, complexity, rotation and no-reuse requirements',type:'doc'},
+    {title:'Privileged account list',desc:'List of all admin/privileged accounts with justification for each — reviewed and signed off',type:'doc'},
+    {title:'SSO configuration export',desc:'Export or screenshot of SSO config showing all critical apps are covered',type:'config'},
+    {title:'Lockout policy log evidence',desc:'Sample logs showing lockout policy is triggered after N failed attempts',type:'log'},
+  ]},
+  'A.8.15':{name:'Logging',items:[
+    {title:'SIEM/logging tool configuration',desc:'Screenshot or export showing what is logged and retention period (minimum 1 year)',type:'config'},
+    {title:'Log sources inventory',desc:'List of all systems sending logs to your central platform',type:'doc'},
+    {title:'Sample audit log',desc:'Example security event log showing format, timestamps and user attribution',type:'log'},
+    {title:'Log integrity controls',desc:'Evidence logs cannot be modified or deleted by regular users',type:'config'},
+    {title:'Log review process document',desc:'Procedure for how and when logs are reviewed, by whom, and how often',type:'doc'},
+  ]},
+  'A.8.8':{name:'Vulnerability Management',items:[
+    {title:'Vulnerability scan report',desc:'Most recent scan output (Nessus, Qualys, Trivy) dated within last 90 days',type:'doc'},
+    {title:'Patch management policy',desc:'Written SLA: critical=24h, high=7d, medium=30d. Signed by management.',type:'doc'},
+    {title:'Patching history log',desc:'Evidence patches were applied within SLA — change tickets or deployment logs',type:'log'},
+    {title:'Remediation tracking spreadsheet',desc:'Open vulns with owner, due date and current status',type:'doc'},
+    {title:'Dependency scanner in CI/CD',desc:'Screenshot of SCA tool (Snyk, Dependabot) integrated in your pipeline',type:'screenshot'},
+  ]},
+  'A.8.23':{name:'Secure Coding',items:[
+    {title:'Secure coding standard',desc:'Written standard covering OWASP Top 10, input validation, crypto usage, secrets handling',type:'doc'},
+    {title:'SAST tool in CI/CD',desc:'Screenshot showing SAST (SonarQube, Semgrep, CodeQL) active in your pipeline',type:'screenshot'},
+    {title:'Code review policy',desc:'Policy requiring peer review before merge. Branch protection rules screenshot.',type:'config'},
+    {title:'Secret scanning configuration',desc:'Evidence that secret scanning (GitHub Secret Scanning, Gitleaks) is enabled on all repos',type:'config'},
+    {title:'Developer security training records',desc:'Evidence developers completed secure coding training in last 12 months',type:'doc'},
+  ]},
+  'A.5.24':{name:'Incident Management Planning',items:[
+    {title:'Incident Response Plan',desc:'Documented IRP covering: detection, triage, containment, eradication, recovery, lessons learned',type:'doc'},
+    {title:'Severity classification matrix',desc:'Table defining P1/P2/P3 severity with examples and response time SLAs',type:'doc'},
+    {title:'IR team contacts / on-call rota',desc:'Contacts for security, IT, legal, comms, and senior management',type:'doc'},
+    {title:'Incident log',desc:'Record of past security incidents showing the process was followed',type:'log'},
+    {title:'Tabletop exercise record',desc:'Evidence the IRP was tested in last 12 months — exercise summary and findings',type:'doc'},
+  ]},
+  'A.5.15':{name:'Access Control',items:[
+    {title:'Access control policy',desc:'Written policy defining how access is granted, reviewed and revoked. Role-based approach.',type:'doc'},
+    {title:'Access review records',desc:'Evidence of quarterly access reviews with sign-off dates and actions taken',type:'doc'},
+    {title:'Joiner/mover/leaver process',desc:'Documented process for provisioning on joining, changing role, and leaving',type:'doc'},
+    {title:'Privileged access audit',desc:'List of admin accounts reviewed and approved in last quarter',type:'log'},
+    {title:'IAM configuration export',desc:'Export of IAM policies demonstrating least privilege is enforced',type:'config'},
+  ]},
+  'A.8.9':{name:'Configuration Management',items:[
+    {title:'IaC repository evidence',desc:'Link or screenshot to your Terraform/Ansible/CloudFormation repo',type:'screenshot'},
+    {title:'Secure baseline configurations',desc:'Documented secure baseline for each system type (server, container, cloud account)',type:'doc'},
+    {title:'Config drift detection',desc:'Evidence of automated drift detection (AWS Config, Chef InSpec)',type:'config'},
+    {title:'Change approval records',desc:'Evidence config changes go through review/approval before deployment',type:'log'},
+    {title:'Hardening checklist',desc:'CIS benchmark or equivalent hardening checklist applied to systems',type:'doc'},
+  ]},
+  'A.8.25':{name:'Secure Development Lifecycle',items:[
+    {title:'SDLC policy document',desc:'Written policy defining security requirements at each phase: design, code, test, deploy',type:'doc'},
+    {title:'Threat modelling evidence',desc:'Example threat model for a recent project (STRIDE, DREAD or PASTA format)',type:'doc'},
+    {title:'Security testing in pipeline',desc:'Screenshot showing SAST, SCA and DAST integrated in CI/CD pipeline',type:'screenshot'},
+    {title:'Security sign-off for releases',desc:'Evidence security review is a gate before production deployment',type:'doc'},
+    {title:'Developer security training records',desc:'Training completion records for all developers for last 12 months',type:'doc'},
+  ]},
+};
 
-function nav(page, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  document.getElementById('breadcrumb').textContent = page;
-  if (el) el.classList.add('active');
-  else {
-    document.querySelectorAll('.nav-item').forEach(n => {
-      if (n.textContent.toLowerCase().includes(page.replace('-',' '))) n.classList.add('active');
-    });
-  }
-  if (window.innerWidth < 768) document.getElementById('sidebar').classList.remove('open');
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ STATE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let controlStatuses = JSON.parse(localStorage.getItem('annexa_controls')||'{}');
+let risks           = JSON.parse(localStorage.getItem('annexa_risks')||'[]');
+let soaData         = JSON.parse(localStorage.getItem('annexa_soa')||'{}');
+let postureAnswers  = {};
+let evidenceChecked = {};
+const statusCycle   = ['not-set','implemented','partial','gap','na'];
+const domainLabel   = {org:'Organizational',ppl:'People',phys:'Physical',tech:'Technological'};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ NAVIGATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function nav(page,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('breadcrumb').textContent=page.replace('-',' ');
+  if(el)el.classList.add('active');
+  if(window.innerWidth<768)document.getElementById('sidebar').classList.remove('open');
 }
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open')}
 
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-}
-
-// ── HEATMAP ───────────────────────────────────────────────────────────────
-
-function buildHeatmap(domainFilter) {
-  const grid = document.getElementById('heatmap-grid');
-  grid.innerHTML = '';
-  const filtered = domainFilter === 'all' ? CONTROLS : CONTROLS.filter(c => c.domain === domainFilter);
-  filtered.forEach(ctrl => {
-    const st = controlStatuses[ctrl.id] || 'not-set';
-    const cell = document.createElement('div');
-    cell.className = `hm-cell ${st}`;
-    cell.textContent = ctrl.id.replace('A.','');
-    cell.title = ctrl.name;
-    cell.onclick = () => cycleStatus(ctrl.id, cell);
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ HEATMAP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildHeatmap(domainFilter){
+  const grid=document.getElementById('heatmap-grid'); grid.innerHTML='';
+  const filtered=domainFilter==='all'?CONTROLS:CONTROLS.filter(c=>c.domain===domainFilter);
+  filtered.forEach(ctrl=>{
+    const st=controlStatuses[ctrl.id]||'not-set';
+    const cell=document.createElement('div');
+    cell.className=`hm-cell ${st}`;
+    cell.textContent=ctrl.id.replace('A.','');
+    cell.title=`${ctrl.id} — ${ctrl.name}`;
+    cell.onclick=()=>cycleStatus(ctrl.id,cell);
     grid.appendChild(cell);
   });
 }
-
-function cycleStatus(id, el) {
-  const cur = controlStatuses[id] || 'not-set';
-  const idx = (statusCycle.indexOf(cur) + 1) % statusCycle.length;
-  controlStatuses[id] = statusCycle[idx];
-  localStorage.setItem('annexa_controls', JSON.stringify(controlStatuses));
-  el.className = `hm-cell ${statusCycle[idx]}`;
+function cycleStatus(id,el){
+  const cur=controlStatuses[id]||'not-set';
+  const idx=(statusCycle.indexOf(cur)+1)%statusCycle.length;
+  controlStatuses[id]=statusCycle[idx];
+  localStorage.setItem('annexa_controls',JSON.stringify(controlStatuses));
+  el.className=`hm-cell ${statusCycle[idx]}`;
+}
+function filterDomain(domain,btn){
+  document.querySelectorAll('#domain-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); buildHeatmap(domain);
 }
 
-function filterDomain(domain, btn) {
-  document.querySelectorAll('#domain-filters .filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  buildHeatmap(domain);
-}
-
-// ── CONTROLS LIST ─────────────────────────────────────────────────────────
-
-const domainLabel = { org:'Organizational', ppl:'People', phys:'Physical', tech:'Technological' };
-
-function buildControlsList(roleFilter) {
-  const list = document.getElementById('controls-list');
-  list.innerHTML = '';
-  const filtered = roleFilter === 'all' ? CONTROLS : CONTROLS.filter(c => c.roles.includes(roleFilter));
-  filtered.forEach(ctrl => {
-    const st = controlStatuses[ctrl.id] || 'none';
-    const statusClass = st === 'implemented' ? 'done' : st === 'partial' ? 'part' : 'none';
-    list.innerHTML += `
-      <div class="control-item">
-        <div class="control-status ${statusClass}"></div>
-        <div class="control-id">${ctrl.id}</div>
-        <div class="control-body">
-          <div class="control-name">${ctrl.name}</div>
-          <div class="control-plain">${ctrl.plain}</div>
-          <div class="control-tags">
-            <span class="ctag ${ctrl.domain}">${domainLabel[ctrl.domain]}</span>
-            ${ctrl.roles.map(r => `<span class="ctag tech">${r}</span>`).join('')}
-          </div>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ CONTROLS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildControlsList(roleFilter){
+  const list=document.getElementById('controls-list'); list.innerHTML='';
+  const filtered=roleFilter==='all'?CONTROLS:CONTROLS.filter(c=>c.roles.includes(roleFilter));
+  filtered.forEach(ctrl=>{
+    const st=controlStatuses[ctrl.id]||'none';
+    const sc=st==='implemented'?'done':st==='partial'?'part':'none';
+    list.innerHTML+=`<div class="control-item">
+      <div class="control-status ${sc}"></div>
+      <div class="control-id">${ctrl.id}</div>
+      <div class="control-body">
+        <div class="control-name">${ctrl.name}</div>
+        <div class="control-plain">${ctrl.plain}</div>
+        <div class="control-tags">
+          <span class="ctag ${ctrl.domain}">${domainLabel[ctrl.domain]}</span>
+          ${ctrl.roles.map(r=>`<span class="ctag tech">${r}</span>`).join('')}
         </div>
-      </div>`;
+      </div>
+    </div>`;
   });
-  if (!filtered.length) {
-    list.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);font-family:var(--font-mono);font-size:12px">No controls match this role filter.</div>`;
-  }
+  if(!filtered.length)list.innerHTML=`<div style="padding:40px;text-align:center;color:var(--text3);font-size:12px">No controls match this role.</div>`;
+}
+function filterRole(role,btn){
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); buildControlsList(role);
 }
 
-function filterRole(role, btn) {
-  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  buildControlsList(role);
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ RISK ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function updateScore(){
+  const l=parseInt(document.getElementById('risk-likelihood').value);
+  const i=parseInt(document.getElementById('risk-impact').value);
+  document.getElementById('likelihood-val').textContent=l;
+  document.getElementById('impact-val').textContent=i;
+  const s=l*i, sev=s>=15?'High':s>=8?'Medium':'Low';
+  const col=s>=15?'var(--danger)':s>=8?'var(--warn)':'var(--accent3)';
+  document.getElementById('risk-score-display').textContent=`${s} — ${sev}`;
+  document.getElementById('risk-score-display').style.color=col;
 }
-
-// ── RISK REGISTER ─────────────────────────────────────────────────────────
-
-function updateScore() {
-  const l = parseInt(document.getElementById('risk-likelihood').value);
-  const i = parseInt(document.getElementById('risk-impact').value);
-  document.getElementById('likelihood-val').textContent = l;
-  document.getElementById('impact-val').textContent = i;
-  const score = l * i;
-  const sev = score >= 15 ? 'High' : score >= 8 ? 'Medium' : 'Low';
-  const col = score >= 15 ? 'var(--danger)' : score >= 8 ? 'var(--warn)' : 'var(--accent3)';
-  document.getElementById('risk-score-display').textContent = `${score} — ${sev}`;
-  document.getElementById('risk-score-display').style.color = col;
+function addRisk(){
+  const asset=document.getElementById('risk-asset').value.trim();
+  const desc=document.getElementById('risk-desc').value.trim();
+  const l=parseInt(document.getElementById('risk-likelihood').value);
+  const i=parseInt(document.getElementById('risk-impact').value);
+  if(!asset){document.getElementById('risk-asset').focus();return;}
+  risks.push({id:Date.now(),asset,desc,l,i,score:l*i});
+  risks.sort((a,b)=>b.score-a.score);
+  localStorage.setItem('annexa_risks',JSON.stringify(risks));
+  document.getElementById('risk-asset').value='';
+  document.getElementById('risk-desc').value='';
+  renderRisks(); showToast('Risk added ✓');
 }
-
-function addRisk() {
-  const asset = document.getElementById('risk-asset').value.trim();
-  const desc  = document.getElementById('risk-desc').value.trim();
-  const l     = parseInt(document.getElementById('risk-likelihood').value);
-  const i     = parseInt(document.getElementById('risk-impact').value);
-  if (!asset) { document.getElementById('risk-asset').focus(); return; }
-  risks.push({ id: Date.now(), asset, desc, l, i, score: l*i });
-  risks.sort((a,b) => b.score - a.score);
-  localStorage.setItem('annexa_risks', JSON.stringify(risks));
-  document.getElementById('risk-asset').value = '';
-  document.getElementById('risk-desc').value  = '';
+function deleteRisk(id){
+  risks=risks.filter(r=>r.id!==id);
+  localStorage.setItem('annexa_risks',JSON.stringify(risks));
   renderRisks();
 }
-
-function renderRisks() {
-  const el = document.getElementById('risk-rows');
-  if (!risks.length) {
-    el.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);font-family:var(--font-mono);font-size:12px">No risks added yet. Add your first risk above.</div>`;
-    return;
-  }
-  el.innerHTML = risks.map(r => {
-    const sev = r.score >= 15 ? 'high' : r.score >= 8 ? 'medium' : 'low';
+function renderRisks(){
+  const el=document.getElementById('risk-rows');
+  if(!risks.length){el.innerHTML=`<div style="padding:40px;text-align:center;color:var(--text3);font-size:12px">No risks yet. Add your first risk above.</div>`;return;}
+  el.innerHTML=risks.map(r=>{
+    const sev=r.score>=15?'high':r.score>=8?'medium':'low';
     return `<div class="rr-row">
-      <div>
-        <div style="color:var(--text);font-size:12px;margin-bottom:3px">${r.asset}</div>
-        <div style="color:var(--text3);font-size:10px">${r.desc || '—'}</div>
-      </div>
+      <div><div style="color:var(--text);font-size:12px;margin-bottom:3px">${r.asset}</div><div style="color:var(--text3);font-size:10px">${r.desc||'—'}</div></div>
       <div style="color:var(--text2)">${r.l}/5</div>
       <div style="color:var(--text2)">${r.i}/5</div>
       <div><span class="risk-score ${sev}">${r.score}</span></div>
       <div><span class="risk-badge ${sev}">${sev.toUpperCase()}</span></div>
+      <div><button class="del-btn" onclick="deleteRisk(${r.id})">✕</button></div>
     </div>`;
   }).join('');
 }
 
-// ── DIFF VIEWER ───────────────────────────────────────────────────────────
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ DIFF ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildDiff(filter){
+  const el=document.getElementById('diff-list');
+  const filtered=filter==='all'?DIFF_DATA:DIFF_DATA.filter(d=>d.type===filter);
+  el.innerHTML=filtered.map(d=>`
+    <div class="diff-item">
+      <div><span class="diff-badge ${d.type==='new'?'same':d.type}">${d.type==='new'?'2013':d.type.toUpperCase()}</span><div class="diff-id">${d.old}</div><div class="diff-name">${d.oldName}</div></div>
+      <div class="diff-arrow">${d.type==='new'?'✕':'→'}</div>
+      <div><span class="diff-badge ${d.type}">${d.type.toUpperCase()}</span><div class="diff-id">${d.newId}</div><div class="diff-name">${d.newName}</div></div>
+    </div>`).join('');
+}
+function filterDiff(type,btn){
+  document.querySelectorAll('#diff-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); buildDiff(type);
+}
 
-function buildDiff(filter) {
-  const el = document.getElementById('diff-list');
-  const filtered = filter === 'all' ? DIFF_DATA : DIFF_DATA.filter(d => d.type === filter);
-  el.innerHTML = filtered.map(d => `
-    <div class="diff-item" data-type="${d.type}">
-      <div>
-        <span class="diff-badge ${d.type === 'new' ? 'same' : d.type}">${d.type === 'new' ? '2013' : d.type.toUpperCase()}</span>
-        <div class="diff-id">${d.old}</div>
-        <div class="diff-name">${d.oldName}</div>
-      </div>
-      <div class="diff-arrow">${d.type === 'new' ? '✕' : '→'}</div>
-      <div>
-        <span class="diff-badge ${d.type}">${d.type.toUpperCase()}</span>
-        <div class="diff-id">${d.new}</div>
-        <div class="diff-name">${d.newName}</div>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ POSTURE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildPostureQuestions(){
+  document.getElementById('posture-questions').innerHTML=POSTURE_QUESTIONS.map((q,i)=>`
+    <div class="posture-q">
+      <div class="posture-q-domain">${domainLabel[q.domain]}</div>
+      <div class="posture-q-text">${i+1}. ${q.q}</div>
+      <div class="posture-options">
+        <button class="posture-opt" onclick="selectPosture(${i},3,this)">✓ Fully implemented</button>
+        <button class="posture-opt" onclick="selectPosture(${i},2,this)">◑ Partially done</button>
+        <button class="posture-opt" onclick="selectPosture(${i},1,this)">○ Planned</button>
+        <button class="posture-opt" onclick="selectPosture(${i},0,this)">✕ Not implemented</button>
       </div>
     </div>`).join('');
 }
-
-function filterDiff(type, btn) {
-  document.querySelectorAll('#page-diff .filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  buildDiff(type);
+function selectPosture(idx,val,btn){
+  postureAnswers[idx]=val;
+  btn.parentElement.querySelectorAll('.posture-opt').forEach(o=>o.className='posture-opt');
+  btn.classList.add(`sel-${val}`);
+}
+function calcPosture(){
+  if(Object.keys(postureAnswers).length<POSTURE_QUESTIONS.length){showToast(`Please answer all ${POSTURE_QUESTIONS.length} questions`);return;}
+  const domains={org:[],ppl:[],tech:[],phys:[]};
+  POSTURE_QUESTIONS.forEach((q,i)=>domains[q.domain].push(postureAnswers[i]));
+  const scores={};
+  Object.keys(domains).forEach(d=>{
+    const vals=domains[d];
+    scores[d]=Math.round((vals.reduce((a,b)=>a+b,0)/(vals.length*3))*100);
+  });
+  document.getElementById('posture-form-wrap').style.display='none';
+  document.getElementById('posture-result').style.display='block';
+  const overall=Math.round(Object.values(scores).reduce((a,b)=>a+b,0)/4);
+  const scoreColors={org:'#7c3aed',ppl:'#10b981',tech:'#00e5ff',phys:'#f59e0b'};
+  document.getElementById('score-grid').innerHTML=
+    Object.keys(scores).map(d=>`
+      <div class="score-card">
+        <div class="score-num" style="color:${scoreColors[d]}">${scores[d]}%</div>
+        <div class="score-label">${domainLabel[d]}</div>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:${scores[d]}%;background:${scoreColors[d]}"></div></div>
+      </div>`).join('')+`
+    <div class="score-card" style="border-color:var(--accent)">
+      <div class="score-num" style="color:var(--accent)">${overall}%</div>
+      <div class="score-label">Overall</div>
+      <div class="score-bar-wrap"><div class="score-bar" style="width:${overall}%;background:var(--accent)"></div></div>
+    </div>`;
+  drawRadar(scores);
+}
+function drawRadar(scores){
+  const canvas=document.getElementById('radarChart');
+  const ctx=canvas.getContext('2d');
+  const cx=210,cy=210,r=150;
+  ctx.clearRect(0,0,420,420);
+  const labels=['Organizational','People','Technological','Physical'];
+  const vals=[scores.org/100,scores.ppl/100,scores.tech/100,scores.phys/100];
+  const colors=['#7c3aed','#10b981','#00e5ff','#f59e0b'];
+  const angles=labels.map((_,i)=>i*(2*Math.PI/4)-Math.PI/2);
+  for(let ring=1;ring<=4;ring++){
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const rr=r*ring/4;i===0?ctx.moveTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a)):ctx.lineTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a))});
+    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;ctx.stroke();
+  }
+  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.stroke()});
+  ctx.beginPath();
+  vals.forEach((v,i)=>{const x=cx+r*v*Math.cos(angles[i]);const y=cy+r*v*Math.sin(angles[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+  ctx.closePath();ctx.fillStyle='rgba(0,229,255,0.12)';ctx.fill();ctx.strokeStyle='#00e5ff';ctx.lineWidth=2.5;ctx.stroke();
+  vals.forEach((v,i)=>{const x=cx+r*v*Math.cos(angles[i]);const y=cy+r*v*Math.sin(angles[i]);ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fillStyle=colors[i];ctx.fill();ctx.strokeStyle='#0a0a0f';ctx.lineWidth=2;ctx.stroke()});
+  labels.forEach((label,i)=>{
+    const lx=cx+(r+34)*Math.cos(angles[i]);const ly=cy+(r+34)*Math.sin(angles[i]);
+    ctx.font='bold 12px Syne,sans-serif';ctx.fillStyle=colors[i];ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,lx,ly);
+    ctx.font='11px JetBrains Mono,monospace';ctx.fillStyle='rgba(255,255,255,0.45)';ctx.fillText(`${Math.round(vals[i]*100)}%`,lx,ly+17);
+  });
+}
+function resetPosture(){
+  postureAnswers={};
+  document.getElementById('posture-form-wrap').style.display='block';
+  document.getElementById('posture-result').style.display='none';
+  buildPostureQuestions();
 }
 
-// ── KEYBOARD SHORTCUTS ────────────────────────────────────────────────────
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ SOA ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildSoA(){
+  document.getElementById('soa-rows').innerHTML=CONTROLS.map(c=>{
+    const s=soaData[c.id]||{applicable:'applicable',justification:''};
+    return `<div class="soa-row">
+      <div class="soa-id">${c.id}</div>
+      <div style="font-size:11px;color:var(--text)">${c.name}</div>
+      <div>
+        <select class="soa-select" onchange="saveSoA('${c.id}','applicable',this.value)">
+          <option value="applicable" ${s.applicable==='applicable'?'selected':''}>✓ Applicable</option>
+          <option value="not-applicable" ${s.applicable==='not-applicable'?'selected':''}>✕ Not Applicable</option>
+          <option value="planned" ${s.applicable==='planned'?'selected':''}>○ Planned</option>
+        </select>
+      </div>
+      <div><input class="soa-input" placeholder="Justification / notes..." value="${(s.justification||'').replace(/"/g,'&quot;')}" oninput="saveSoA('${c.id}','justification',this.value)"/></div>
+    </div>`;
+  }).join('');
+  updateSoAStats();
+}
+function saveSoA(id,field,val){
+  if(!soaData[id])soaData[id]={applicable:'applicable',justification:''};
+  soaData[id][field]=val;
+  localStorage.setItem('annexa_soa',JSON.stringify(soaData));
+  updateSoAStats();
+}
+function updateSoAStats(){
+  const app=CONTROLS.filter(c=>(soaData[c.id]||{applicable:'applicable'}).applicable==='applicable').length;
+  const na=CONTROLS.filter(c=>(soaData[c.id]||{}).applicable==='not-applicable').length;
+  const pl=CONTROLS.filter(c=>(soaData[c.id]||{}).applicable==='planned').length;
+  document.getElementById('soa-stats').innerHTML=`
+    <div class="soa-stat"><div class="soa-stat-num" style="color:var(--accent3)">${app}</div><div class="soa-stat-label">Applicable</div></div>
+    <div class="soa-stat"><div class="soa-stat-num" style="color:var(--text3)">${na}</div><div class="soa-stat-label">Not Applicable</div></div>
+    <div class="soa-stat"><div class="soa-stat-num" style="color:var(--warn)">${pl}</div><div class="soa-stat-label">Planned</div></div>
+    <div class="soa-stat"><div class="soa-stat-num" style="color:var(--accent)">${CONTROLS.length}</div><div class="soa-stat-label">Total</div></div>`;
+}
+function soaMarkAll(status){
+  CONTROLS.forEach(c=>{soaData[c.id]=soaData[c.id]||{justification:''};soaData[c.id].applicable=status;});
+  localStorage.setItem('annexa_soa',JSON.stringify(soaData));
+  buildSoA(); showToast('All controls marked ✓');
+}
 
-document.addEventListener('keydown', e => {
-  if (e.key === '?' ) alert('Keyboard shortcuts:\n\n  g d  → Dashboard\n  g h  → Heatmap\n  g c  → Controls\n  g r  → Risk Register\n  g x  → Diff Viewer\n\n  ?    → This help');
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ THREATS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildThreats(){
+  document.getElementById('threat-grid').innerHTML=THREATS.map(t=>`
+    <div class="threat-card" onclick="selectThreat('${t.id}',this)">
+      <div class="threat-icon">${t.icon}</div>
+      <div class="threat-name">${t.name}</div>
+      <div class="threat-desc">${t.desc}</div>
+    </div>`).join('');
+}
+function selectThreat(id,el){
+  document.querySelectorAll('.threat-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  const t=THREATS.find(x=>x.id===id);
+  const result=document.getElementById('threat-result');
+  document.getElementById('tr-prevents').innerHTML=t.prevents.map(p=>{
+    const ctrl=CONTROLS.find(c=>c.id===p.id)||{name:p.id};
+    return `<div class="tr-ctrl prevents"><div class="tr-status-dot"></div><div class="tr-ctrl-id">${p.id}</div><div><div class="tr-ctrl-name">${ctrl.name}</div><div class="tr-ctrl-why">${p.why}</div></div></div>`;
+  }).join('');
+  document.getElementById('tr-gaps').innerHTML=t.gaps.map(g=>{
+    const ctrl=CONTROLS.find(c=>c.id===g.id)||{name:g.id};
+    return `<div class="tr-ctrl gap"><div class="tr-status-dot"></div><div class="tr-ctrl-id">${g.id}</div><div><div class="tr-ctrl-name">${ctrl.name}</div><div class="tr-ctrl-why">${g.why}</div></div></div>`;
+  }).join('');
+  result.classList.add('visible');
+  result.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ EVIDENCE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildEvidenceSelect(){
+  const sel=document.getElementById('ev-select');
+  Object.keys(EVIDENCE).forEach(id=>{
+    const opt=document.createElement('option');
+    opt.value=id; opt.textContent=`${id} — ${EVIDENCE[id].name}`;
+    sel.appendChild(opt);
+  });
+}
+function loadEvidence(){
+  const id=document.getElementById('ev-select').value;
+  const result=document.getElementById('ev-result');
+  if(!id){result.innerHTML='';return;}
+  const ev=EVIDENCE[id];
+  if(!evidenceChecked[id])evidenceChecked[id]={};
+  result.innerHTML=`
+    <div class="ev-result">
+      <div class="ev-header"><div class="ev-ctrl-id">${id}</div><div class="ev-ctrl-name">${ev.name}</div></div>
+      <div class="ev-items">${ev.items.map((item,i)=>`
+        <div class="ev-item">
+          <div class="ev-checkbox ${evidenceChecked[id][i]?'checked':''}" onclick="toggleEvidence('${id}',${i},this)">${evidenceChecked[id][i]?'✓':''}</div>
+          <div>
+            <div class="ev-item-title">${item.title}</div>
+            <div class="ev-item-desc">${item.desc}</div>
+            <span class="ev-item-type ${item.type}">${item.type}</span>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+function toggleEvidence(ctrlId,idx,el){
+  if(!evidenceChecked[ctrlId])evidenceChecked[ctrlId]={};
+  evidenceChecked[ctrlId][idx]=!evidenceChecked[ctrlId][idx];
+  el.classList.toggle('checked');
+  el.textContent=evidenceChecked[ctrlId][idx]?'✓':'';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ EXPORTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function exportRiskCSV(){
+  if(!risks.length){showToast('No risks to export');return;}
+  const header='Asset,Description,Likelihood,Impact,Score,Severity\n';
+  const rows=risks.map(r=>`"${r.asset}","${r.desc||''}",${r.l},${r.i},${r.score},${r.score>=15?'HIGH':r.score>=8?'MEDIUM':'LOW'}`).join('\n');
+  downloadFile('annexa-risk-register.csv',header+rows,'text/csv');
+  showToast('CSV downloaded ✓');
+}
+function exportSoACSV(){
+  const header='Control ID,Control Name,Applicable,Justification\n';
+  const rows=CONTROLS.map(c=>{const d=soaData[c.id]||{applicable:'applicable',justification:''};return `"${c.id}","${c.name}","${d.applicable}","${d.justification||''}"`}).join('\n');
+  downloadFile('annexa-soa.csv',header+rows,'text/csv');
+  showToast('SoA CSV downloaded ✓');
+}
+function downloadFile(name,content,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=name; a.click();
+}
+function exportHeatmapPDF(){
+  const {jsPDF}=window.jspdf; const doc=new jsPDF();
+  doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(0,180,220);
+  doc.text('annexa — Compliance Heatmap',20,22);
+  doc.setFontSize(9);doc.setTextColor(100,100,120);
+  doc.text(`ISO 27001:2022 | ${new Date().toLocaleDateString()} | ${CONTROLS.length} controls`,20,32);
+  let y=44;
+  const statusMap={'implemented':'Implemented','partial':'Partial','gap':'Gap','na':'N/A','not-set':'Not Assessed'};
+  const colorMap={'implemented':[16,185,129],'partial':[245,158,11],'gap':[239,68,68],'na':[100,100,130],'not-set':[60,60,90]};
+  CONTROLS.forEach(c=>{
+    if(y>275){doc.addPage();y=20;}
+    const st=controlStatuses[c.id]||'not-set';
+    const col=colorMap[st];
+    doc.setFillColor(col[0],col[1],col[2]);doc.roundedRect(18,y-4,6,6,1,1,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(160,160,200);doc.text(c.id,28,y);
+    doc.setFont('helvetica','normal');doc.setTextColor(210,210,230);doc.text(c.name,56,y);
+    doc.setFont('helvetica','bold');doc.setTextColor(col[0],col[1],col[2]);doc.text(statusMap[st],168,y);
+    y+=9;
+  });
+  doc.save('annexa-heatmap.pdf'); showToast('PDF downloaded ✓');
+}
+function exportRiskPDF(){
+  const {jsPDF}=window.jspdf; const doc=new jsPDF();
+  doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(0,180,220);
+  doc.text('annexa — Risk Register',20,22);
+  doc.setFontSize(9);doc.setTextColor(100,100,120);
+  doc.text(`${new Date().toLocaleDateString()} | ${risks.length} risks`,20,32);
+  let y=46;
+  risks.forEach(r=>{
+    if(y>265){doc.addPage();y=20;}
+    const sev=r.score>=15?'HIGH':r.score>=8?'MEDIUM':'LOW';
+    const col=r.score>=15?[239,68,68]:r.score>=8?[245,158,11]:[16,185,129];
+    doc.setFillColor(22,22,40);doc.roundedRect(14,y-7,182,18,2,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(220,220,240);doc.text(r.asset,20,y);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(130,130,160);doc.text(r.desc||'—',20,y+7,{maxWidth:120});
+    doc.setFillColor(col[0],col[1],col[2]);doc.roundedRect(158,y-5,32,12,2,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(10,10,20);doc.text(`${sev} ${r.score}`,162,y+2);
+    y+=24;
+  });
+  doc.save('annexa-risk-register.pdf'); showToast('PDF downloaded ✓');
+}
+function exportSoAPDF(){
+  const {jsPDF}=window.jspdf; const doc=new jsPDF('landscape');
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(0,180,220);
+  doc.text('annexa — Statement of Applicability',20,22);
+  doc.setFontSize(8);doc.setTextColor(100,100,120);
+  doc.text(`ISO 27001:2022 | ${new Date().toLocaleDateString()} | Organization: _________________________`,20,31);
+  let y=44;
+  CONTROLS.forEach(c=>{
+    if(y>195){doc.addPage();y=20;}
+    const d=soaData[c.id]||{applicable:'applicable',justification:''};
+    const col=d.applicable==='applicable'?[16,185,129]:d.applicable==='planned'?[245,158,11]:[100,100,130];
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,180,220);doc.text(c.id,14,y);
+    doc.setFont('helvetica','normal');doc.setTextColor(200,200,220);doc.text(c.name,40,y,{maxWidth:90});
+    doc.setFont('helvetica','bold');doc.setTextColor(col[0],col[1],col[2]);doc.text(d.applicable.toUpperCase(),140,y);
+    doc.setFont('helvetica','normal');doc.setTextColor(150,150,170);doc.text(d.justification||'—',175,y,{maxWidth:100});
+    y+=8;
+  });
+  doc.save('annexa-soa.pdf'); showToast('SoA PDF downloaded ✓');
+}
+function exportPosturePDF(){
+  const {jsPDF}=window.jspdf; const doc=new jsPDF();
+  doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(0,180,220);
+  doc.text('annexa — Security Posture Report',20,22);
+  doc.setFontSize(9);doc.setTextColor(100,100,120);
+  doc.text(`ISO 27001:2022 Self Assessment | ${new Date().toLocaleDateString()}`,20,32);
+  let y=46;
+  POSTURE_QUESTIONS.forEach((q,i)=>{
+    if(y>275){doc.addPage();y=20;}
+    const ans=postureAnswers[i];
+    const label=ans===3?'Fully Implemented':ans===2?'Partially Done':ans===1?'Planned':'Not Implemented';
+    const col=ans===3?[16,185,129]:ans===2?[245,158,11]:ans===1?[0,180,220]:[239,68,68];
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(180,180,200);
+    doc.text(`${i+1}. ${q.q}`,20,y,{maxWidth:140});
+    doc.setFont('helvetica','bold');doc.setTextColor(col[0],col[1],col[2]);doc.text(label,170,y);
+    y+=14;
+  });
+  doc.save('annexa-posture-report.pdf'); showToast('Report downloaded ✓');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ TOAST ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function showToast(msg){
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ KEYBOARD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let keyBuf='';
+document.addEventListener('keydown',e=>{
+  if(e.key==='?'){alert('Keyboard shortcuts:\n\n  g d  → Dashboard\n  g h  → Heatmap\n  g c  → Controls\n  g r  → Risk Register\n  g x  → Diff Viewer\n  g p  → Posture Score\n  g s  → SoA Generator\n  g t  → Threat Mapper\n  g e  → Evidence Wizard\n\n  ?    → This help');return;}
+  keyBuf+=e.key;if(keyBuf.length>2)keyBuf=keyBuf.slice(-2);
+  const map={gd:'dashboard',gh:'heatmap',gc:'controls',gr:'risk',gx:'diff',gp:'posture',gs:'soa',gt:'threats',ge:'evidence'};
+  if(map[keyBuf]){nav(map[keyBuf],null);keyBuf='';}
 });
 
-let keyBuffer = '';
-document.addEventListener('keydown', e => {
-  keyBuffer += e.key;
-  if (keyBuffer.length > 2) keyBuffer = keyBuffer.slice(-2);
-  const map = { 'gd':'dashboard','gh':'heatmap','gc':'controls','gr':'risk','gx':'diff' };
-  if (map[keyBuffer]) { nav(map[keyBuffer], null); keyBuffer = ''; }
-});
-
-// ── INIT ──────────────────────────────────────────────────────────────────
-
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ INIT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 buildHeatmap('all');
 buildControlsList('all');
 renderRisks();
 buildDiff('all');
+buildPostureQuestions();
+buildSoA();
+buildThreats();
+buildEvidenceSelect();
 updateScore();
 </script>
 </body>
