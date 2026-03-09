@@ -1032,81 +1032,206 @@ function downloadFile(name,content,type){
 }
 function exportHeatmapPDF(){
   const {jsPDF}=window.jspdf; const doc=new jsPDF();
-  doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(0,180,220);
-  doc.text('annexa — Compliance Heatmap',20,22);
-  doc.setFontSize(9);doc.setTextColor(100,100,120);
-  doc.text(`ISO 27001:2022 | ${new Date().toLocaleDateString()} | ${CONTROLS.length} controls`,20,32);
-  let y=44;
+  const W=210,H=297;
+  // Dark background every page
+  const addDarkBg=()=>{doc.setFillColor(10,10,15);doc.rect(0,0,W,H,'F');};
+  addDarkBg();
+  // Header bar
+  doc.setFillColor(15,15,24);doc.rect(0,0,W,22,'F');
+  doc.setFillColor(0,229,255);doc.rect(0,0,3,22,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(0,229,255);
+  doc.text('annexa',8,14);
+  doc.setFontSize(10);doc.setTextColor(180,180,220);
+  doc.text('Compliance Heatmap',36,14);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,120);
+  doc.text(`ISO 27001:2022  |  ${new Date().toLocaleDateString()}  |  ${CONTROLS.length} controls`,8,20);
+  // Legend
+  const legendY=28;
+  [{c:[16,185,129],l:'Implemented'},{c:[245,158,11],l:'Partial'},{c:[239,68,68],l:'Gap'},{c:[100,100,160],l:'N/A'},{c:[40,40,70],l:'Not Assessed'}].forEach((item,i)=>{
+    const x=8+i*38;
+    doc.setFillColor(...item.c);doc.roundedRect(x,legendY-3,4,4,1,1,'F');
+    doc.setFontSize(7);doc.setTextColor(160,160,200);doc.text(item.l,x+6,legendY);
+  });
+  // Divider
+  doc.setDrawColor(30,30,50);doc.setLineWidth(0.3);doc.line(8,33,202,33);
+  let y=42;
   const statusMap={'implemented':'Implemented','partial':'Partial','gap':'Gap','na':'N/A','not-set':'Not Assessed'};
-  const colorMap={'implemented':[16,185,129],'partial':[245,158,11],'gap':[239,68,68],'na':[100,100,130],'not-set':[60,60,90]};
-  CONTROLS.forEach(c=>{
-    if(y>275){doc.addPage();y=20;}
+  const colorMap={'implemented':[16,185,129],'partial':[245,158,11],'gap':[239,68,68],'na':[80,80,120],'not-set':[40,40,70]};
+  CONTROLS.forEach((c,idx)=>{
+    if(y>282){doc.addPage();addDarkBg();y=16;}
     const st=controlStatuses[c.id]||'not-set';
     const col=colorMap[st];
-    doc.setFillColor(col[0],col[1],col[2]);doc.roundedRect(18,y-4,6,6,1,1,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(160,160,200);doc.text(c.id,28,y);
-    doc.setFont('helvetica','normal');doc.setTextColor(210,210,230);doc.text(c.name,56,y);
-    doc.setFont('helvetica','bold');doc.setTextColor(col[0],col[1],col[2]);doc.text(statusMap[st],168,y);
-    y+=9;
+    // Row bg alternating
+    if(idx%2===0){doc.setFillColor(14,14,22);doc.rect(6,y-5,196,8,'F');}
+    // Status dot
+    doc.setFillColor(col[0],col[1],col[2]);doc.circle(11,y-1,2,'F');
+    // Control ID
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,229,255);
+    doc.text(c.id,16,y);
+    // Name
+    doc.setFont('helvetica','normal');doc.setTextColor(200,200,230);
+    doc.text(c.name,46,y);
+    // Status
+    doc.setFont('helvetica','bold');doc.setTextColor(col[0],col[1],col[2]);
+    doc.text(statusMap[st],168,y);
+    y+=8;
   });
+  // Footer
+  doc.setFillColor(10,10,15);doc.rect(0,285,W,12,'F');
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(50,50,80);
+  doc.text('github.com/irfanm46/annexa  |  Free · Offline · Open Source',8,292);
   doc.save('annexa-heatmap.pdf'); showToast('PDF downloaded ✓');
 }
 function exportRiskPDF(){
   const {jsPDF}=window.jspdf; const doc=new jsPDF();
-  doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(0,180,220);
-  doc.text('annexa — Risk Register',20,22);
-  doc.setFontSize(9);doc.setTextColor(100,100,120);
-  doc.text(`${new Date().toLocaleDateString()} | ${risks.length} risks`,20,32);
-  let y=46;
-  risks.forEach(r=>{
-    if(y>265){doc.addPage();y=20;}
+  const W=210,H=297;
+  const addDarkBg=()=>{doc.setFillColor(10,10,15);doc.rect(0,0,W,H,'F');};
+  addDarkBg();
+  // Header
+  doc.setFillColor(15,15,24);doc.rect(0,0,W,22,'F');
+  doc.setFillColor(239,68,68);doc.rect(0,0,3,22,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(239,68,68);
+  doc.text('annexa',8,14);
+  doc.setFontSize(10);doc.setTextColor(180,180,220);doc.text('Risk Register',36,14);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,120);
+  doc.text(`${new Date().toLocaleDateString()}  |  ${risks.length} risks  |  ISO 27001:2022`,8,20);
+  // Column headers
+  doc.setFillColor(18,18,30);doc.rect(6,25,196,8,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(80,80,130);
+  doc.text('ASSET / RISK',10,30);doc.text('L',138,30);doc.text('I',150,30);doc.text('SCORE',160,30);doc.text('SEVERITY',178,30);
+  doc.setDrawColor(30,30,50);doc.line(6,33,202,33);
+  let y=44;
+  risks.forEach((r,idx)=>{
+    if(y>278){doc.addPage();addDarkBg();y=16;}
     const sev=r.score>=15?'HIGH':r.score>=8?'MEDIUM':'LOW';
     const col=r.score>=15?[239,68,68]:r.score>=8?[245,158,11]:[16,185,129];
-    doc.setFillColor(22,22,40);doc.roundedRect(14,y-7,182,18,2,2,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(220,220,240);doc.text(r.asset,20,y);
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(130,130,160);doc.text(r.desc||'—',20,y+7,{maxWidth:120});
-    doc.setFillColor(col[0],col[1],col[2]);doc.roundedRect(158,y-5,32,12,2,2,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(10,10,20);doc.text(`${sev} ${r.score}`,162,y+2);
-    y+=24;
+    const bg=idx%2===0?[14,14,22]:[12,12,18];
+    doc.setFillColor(...bg);doc.roundedRect(6,y-6,196,14,1,1,'F');
+    // Severity bar on left
+    doc.setFillColor(col[0],col[1],col[2]);doc.rect(6,y-6,2,14,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(220,220,240);
+    doc.text(r.asset,12,y);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(100,100,140);
+    doc.text(r.desc||'—',12,y+5,{maxWidth:120});
+    // Stats
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(160,160,200);
+    doc.text(String(r.l),138,y);doc.text(String(r.i),150,y);
+    // Score badge
+    doc.setFillColor(col[0],col[1],col[2],0.2);
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(col[0],col[1],col[2]);
+    doc.text(String(r.score),162,y);
+    // Sev label
+    doc.setFontSize(7);doc.text(sev,178,y);
+    y+=16;
   });
+  // Footer
+  doc.setFillColor(10,10,15);doc.rect(0,285,W,12,'F');
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(50,50,80);
+  doc.text('github.com/irfanm46/annexa  |  Free · Offline · Open Source',8,292);
   doc.save('annexa-risk-register.pdf'); showToast('PDF downloaded ✓');
 }
 function exportSoAPDF(){
   const {jsPDF}=window.jspdf; const doc=new jsPDF('landscape');
-  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(0,180,220);
-  doc.text('annexa — Statement of Applicability',20,22);
-  doc.setFontSize(8);doc.setTextColor(100,100,120);
-  doc.text(`ISO 27001:2022 | ${new Date().toLocaleDateString()} | Organization: _________________________`,20,31);
-  let y=44;
-  CONTROLS.forEach(c=>{
-    if(y>195){doc.addPage();y=20;}
+  const W=297,H=210;
+  const addDarkBg=()=>{doc.setFillColor(10,10,15);doc.rect(0,0,W,H,'F');};
+  addDarkBg();
+  // Header
+  doc.setFillColor(15,15,24);doc.rect(0,0,W,22,'F');
+  doc.setFillColor(124,58,237);doc.rect(0,0,3,22,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(167,139,250);
+  doc.text('annexa',8,14);
+  doc.setFontSize(10);doc.setTextColor(180,180,220);doc.text('Statement of Applicability',36,14);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,120);
+  doc.text(`ISO 27001:2022  |  ${new Date().toLocaleDateString()}  |  Organization: _______________________`,8,20);
+  // Column headers
+  doc.setFillColor(18,18,30);doc.rect(6,24,284,8,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(80,80,130);
+  doc.text('CONTROL',10,29);doc.text('NAME',38,29);doc.text('APPLICABLE',145,29);doc.text('JUSTIFICATION / NOTES',175,29);
+  doc.setDrawColor(30,30,50);doc.line(6,32,291,32);
+  let y=40;
+  CONTROLS.forEach((c,idx)=>{
+    if(y>198){doc.addPage();addDarkBg();y=16;}
     const d=soaData[c.id]||{applicable:'applicable',justification:''};
-    const col=d.applicable==='applicable'?[16,185,129]:d.applicable==='planned'?[245,158,11]:[100,100,130];
-    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,180,220);doc.text(c.id,14,y);
-    doc.setFont('helvetica','normal');doc.setTextColor(200,200,220);doc.text(c.name,40,y,{maxWidth:90});
-    doc.setFont('helvetica','bold');doc.setTextColor(col[0],col[1],col[2]);doc.text(d.applicable.toUpperCase(),140,y);
-    doc.setFont('helvetica','normal');doc.setTextColor(150,150,170);doc.text(d.justification||'—',175,y,{maxWidth:100});
+    const col=d.applicable==='applicable'?[16,185,129]:d.applicable==='planned'?[245,158,11]:[80,80,120];
+    const bg=idx%2===0?[14,14,22]:[12,12,18];
+    doc.setFillColor(...bg);doc.rect(6,y-5,284,8,'F');
+    doc.setFillColor(col[0],col[1],col[2]);doc.rect(6,y-5,2,8,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(0,229,255);doc.text(c.id,10,y);
+    doc.setFont('helvetica','normal');doc.setTextColor(190,190,220);doc.text(c.name,38,y,{maxWidth:100});
+    doc.setFont('helvetica','bold');doc.setTextColor(col[0],col[1],col[2]);doc.text(d.applicable.toUpperCase(),145,y);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(120,120,160);
+    doc.text(d.justification||'—',175,y,{maxWidth:112});
     y+=8;
   });
+  doc.setFillColor(10,10,15);doc.rect(0,200,W,10,'F');
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(50,50,80);
+  doc.text('github.com/irfanm46/annexa  |  Free · Offline · Open Source',8,207);
   doc.save('annexa-soa.pdf'); showToast('SoA PDF downloaded ✓');
 }
 function exportPosturePDF(){
   const {jsPDF}=window.jspdf; const doc=new jsPDF();
-  doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(0,180,220);
-  doc.text('annexa — Security Posture Report',20,22);
-  doc.setFontSize(9);doc.setTextColor(100,100,120);
-  doc.text(`ISO 27001:2022 Self Assessment | ${new Date().toLocaleDateString()}`,20,32);
-  let y=46;
-  POSTURE_QUESTIONS.forEach((q,i)=>{
-    if(y>275){doc.addPage();y=20;}
-    const ans=postureAnswers[i];
-    const label=ans===3?'Fully Implemented':ans===2?'Partially Done':ans===1?'Planned':'Not Implemented';
-    const col=ans===3?[16,185,129]:ans===2?[245,158,11]:ans===1?[0,180,220]:[239,68,68];
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(180,180,200);
-    doc.text(`${i+1}. ${q.q}`,20,y,{maxWidth:140});
-    doc.setFont('helvetica','bold');doc.setTextColor(col[0],col[1],col[2]);doc.text(label,170,y);
-    y+=14;
+  const W=210,H=297;
+  const addDarkBg=()=>{doc.setFillColor(10,10,15);doc.rect(0,0,W,H,'F');};
+  addDarkBg();
+  // Compute scores
+  const domains={org:[],ppl:[],tech:[],phys:[]};
+  POSTURE_QUESTIONS.forEach((q,i)=>domains[q.domain].push(postureAnswers[i]||0));
+  const scores={};
+  Object.keys(domains).forEach(d=>{const v=domains[d];scores[d]=Math.round((v.reduce((a,b)=>a+b,0)/(v.length*3))*100);});
+  const overall=Math.round(Object.values(scores).reduce((a,b)=>a+b,0)/4);
+  // Header
+  doc.setFillColor(15,15,24);doc.rect(0,0,W,28,'F');
+  doc.setFillColor(0,229,255);doc.rect(0,0,3,28,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(0,229,255);
+  doc.text('annexa',8,14);
+  doc.setFontSize(10);doc.setTextColor(180,180,220);doc.text('Security Posture Report',36,14);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,120);
+  doc.text(`ISO 27001:2022 Self Assessment  |  ${new Date().toLocaleDateString()}`,8,22);
+  // Overall score banner
+  doc.setFillColor(0,229,255);doc.rect(0,28,W,1,'F');
+  // Score cards
+  const scoreColors={org:[124,58,237],ppl:[16,185,129],tech:[0,229,255],phys:[245,158,11]};
+  const domLabels={org:'Organizational',ppl:'People',tech:'Technological',phys:'Physical'};
+  let sx=8;
+  Object.keys(scores).forEach(d=>{
+    const col=scoreColors[d];
+    doc.setFillColor(15,15,28);doc.roundedRect(sx,32,44,22,2,2,'F');
+    doc.setFillColor(col[0],col[1],col[2]);doc.rect(sx,32,44,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(col[0],col[1],col[2]);
+    doc.text(`${scores[d]}%`,sx+4,46);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(100,100,140);
+    doc.text(domLabels[d],sx+4,52);
+    sx+=46;
   });
+  // Overall
+  doc.setFillColor(0,30,40);doc.roundedRect(sx,32,44,22,2,2,'F');
+  doc.setFillColor(0,229,255);doc.rect(sx,32,44,2,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(0,229,255);
+  doc.text(`${overall}%`,sx+4,46);
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(100,180,200);
+  doc.text('Overall',sx+4,52);
+  // Divider
+  doc.setDrawColor(30,30,50);doc.line(8,57,202,57);
+  // Questions
+  let y=66;
+  POSTURE_QUESTIONS.forEach((q,i)=>{
+    if(y>280){doc.addPage();addDarkBg();y=16;}
+    const ans=postureAnswers[i]||0;
+    const label=ans===3?'Fully Implemented':ans===2?'Partially Done':ans===1?'Planned':'Not Implemented';
+    const col=ans===3?[16,185,129]:ans===2?[245,158,11]:ans===1?[0,229,255]:[239,68,68];
+    const bg=i%2===0?[14,14,22]:[12,12,18];
+    doc.setFillColor(...bg);doc.roundedRect(6,y-6,196,12,1,1,'F');
+    // Score indicator
+    doc.setFillColor(col[0],col[1],col[2]);doc.circle(12,y,2.5,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(190,190,220);
+    doc.text(`${i+1}. ${q.q}`,18,y,{maxWidth:140});
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(col[0],col[1],col[2]);
+    doc.text(label,162,y);
+    y+=13;
+  });
+  doc.setFillColor(10,10,15);doc.rect(0,285,W,12,'F');
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(50,50,80);
+  doc.text('github.com/irfanm46/annexa  |  Free · Offline · Open Source',8,292);
   doc.save('annexa-posture-report.pdf'); showToast('Report downloaded ✓');
 }
 
