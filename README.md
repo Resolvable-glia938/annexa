@@ -159,10 +159,8 @@ MIT — free forever. Do whatever you want with it.
 
 ## ⭐ Star History
 
-If this helped you, a star means the world and helps other engineers find it.
+If this helped you, a star means the world and helps other engineers find it. 
 
-compliance-as-code,iso-27001-checklist, grc-tool, infosec.
-#iso27001, #compliance, #cybersecurity, #infosec, #open-source-grc.
 ---
 
 <div align="center">
